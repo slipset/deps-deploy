@@ -12,7 +12,8 @@
   (aether/deploy :pom-file "pom.xml"
                  :jar-file artifact
                  :repository repository
-                 :coordinates [(symbol name) version] ))
+                 :coordinates [(symbol name) version])
+  (println "done."))
 
 (defn install [{:keys [artifact name version] :as opts}]
   (println "Installing" (str name "-" version)  "to your local `.m2`")
