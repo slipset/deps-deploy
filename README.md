@@ -11,7 +11,7 @@ It will read your Clojars username/password from the environment variables `CLOJ
 To deploy to Clojars, simply merge 
 
 ```clojure
-{:deploy {:extra-deps {deps-deploy {:mvn/version "RELEASE"}
+{:deploy {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" 
                       "{:artifact,\"YOUR_JAR.jar\",:name,YOUR_ARTIFACT_NAME,:version,\"0.0.1\"}"]}}
 ```
@@ -26,7 +26,7 @@ to deploy to Clojars
 
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
-{:install {:extra-deps {deps-deploy {:mvn/version "RELEASE"}
+{:install {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
            :main-opts ["-m" "deps-deploy.deps-deploy" "install"
            "{:artifact,\"YOUR_JAR.jar\",:name,YOUR_ARTIFACT_NAME,:version,\"0.0.1\"}"]}}
 ```
