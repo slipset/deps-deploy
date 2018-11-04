@@ -4,6 +4,8 @@
 A Clojure library to deploy your stuff to clojars with `clj` or `clojure`. It's a very thin wrapper around
 Chaz Emericks [pommegranate](https://github.com/cemerick/pomegranate) library.
 
+It will read your Clojars username/password from the environment variables `CLOJARS_USERNAME` and `CLOJARS_PASSWORD`.
+
 ## Usage
 
 To deploy to Clojars, simply merge 
@@ -13,8 +15,7 @@ To deploy to Clojars, simply merge
           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" 
                       "{:artifact,\"YOUR_JAR.jar\",:name,YOUR_ARTIFACT_NAME,:version,\"0.0.1\"}"]}}
 ```
-
-have a `pom.xml` handy (you can generate one with `clj -Spom` and `deps-deploy` with 
+into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom),` and deploy with 
 
 ```sh
 $ env CLOJARS_USER=username CLOJARS_PASSWORD=password clj -a:deploy
