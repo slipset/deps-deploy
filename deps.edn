@@ -1,4 +1,4 @@
-{:paths ["resources" "src"]
+{:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "RELEASE"}
         com.cemerick/pomegranate {:mvn/version "RELEASE"}}
  :aliases
