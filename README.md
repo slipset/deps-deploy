@@ -2,7 +2,7 @@
 # deps-deploy
 
 A Clojure library to deploy your stuff to clojars with `clj` or `clojure`. It's a very thin wrapper around
-Chaz Emericks [pommegranate](https://github.com/cemerick/pomegranate) library.
+Chaz Emericks [pomegranate](https://github.com/cemerick/pomegranate) library.
 
 It will read your Clojars username/password from the environment variables `CLOJARS_USERNAME` and `CLOJARS_PASSWORD`.
 
