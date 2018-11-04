@@ -1,3 +1,4 @@
+[![Clojars Project](https://img.shields.io/clojars/v/deps-deploy.svg)](https://clojars.org/deps-deploy)
 # deps-deploy
 
 A Clojure library to deploy your stuff to clojars with `clj` or `clojure`. It's a very thin wrapper around
