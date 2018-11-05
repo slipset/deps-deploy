@@ -8,45 +8,49 @@
                                        :username (System/getenv "CLOJARS_USERNAME")
                                        :password (System/getenv "CLOJARS_PASSWORD")}})
 
-(def name-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/name)
+(def artifact-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId)
+(def group-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId)
 (def version-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version)
 
-(defn name-version-from-pom [pom-str]
-  (->> pom-str
-       xml/parse-str
-       :content
-       (remove string?)
-       (keep (fn [{:keys [tag] :as m}]
-               (when (or (= tag
-                            name-tag)
-                         (= tag
-                            version-tag))
-                 {(keyword (name tag)) (first (:content m))})))
-       (apply merge)))
+(defn coordinates-from-pom [pom-str]
+  (let [tmp (->> pom-str
+                 xml/parse-str
+                 :content
+                 (remove string?)
+                 (keep (fn [{:keys [tag] :as m}]
+                         (when (or (= tag
+                                      artifact-id-tag)
+                                   (= tag
+                                      group-id-tag)
+                                   (= tag
+                                      version-tag))
+                           {(keyword (name tag)) (first (:content m))})))
+                 (apply merge))]
+    {:coordinates [(symbol (str (:groupId tmp) "/" (:artifactId tmp))) (:version tmp)]}))
 
 (defmulti deploy :installer)
 
-(defmethod deploy :clojars [{:keys [artifact name version repository]
+(defmethod deploy :clojars [{:keys [artifact coordinates repository]
                              :or {repository default-repo-settings} :as opts }]
-  (println "Deploying"  (str name "-" version) "to clojars as" (-> repository vals first :username))
+  (println "Deploying"  (str (first coordinates) "-" (second coordinates)) "to clojars as"
+           (-> repository vals first :username))
   (aether/deploy :pom-file "pom.xml"
                  :jar-file artifact
                  :repository repository
-                 :coordinates [(symbol name) version])
+                 :coordinates coordinates)
   (println "done."))
 
-(defmethod deploy :local [{:keys [artifact name version] :as opts}]
-  (println "Installing" (str name "-" version)  "to your local `.m2`")
+(defmethod deploy :local [{:keys [artifact coordinates]}]
+  (println "Installing" (str (first coordinates) "-" (second coordinates)) "to your local `.m2`")
   (aether/install :jar-file (str artifact)
                   :pom-file "pom.xml"
                   :transfer-listener :stdout
-                  :coordinates [name version])
+                  :coordinates coordinates)
   (println "done."))
 
 (defn -main [deploy-or-install artifact & _]
-  (let [artifact-info (-> {:installer (cond (= "deploy" deploy-or-install) :clojars
-                                            (= "install" deploy-or-install) :local)
-                           :artifact artifact}
-                          (merge (name-version-from-pom (slurp "pom.xml")))
-                          (update :name symbol))]
-    (deploy artifact-info)))
+  (->> {:installer (cond (= "deploy" deploy-or-install) :clojars
+                         (= "install" deploy-or-install) :local)
+        :artifact artifact}
+       (merge (coordinates-from-pom (slurp "pom.xml")))
+       deploy))
