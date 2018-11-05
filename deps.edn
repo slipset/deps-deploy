@@ -1,6 +1,9 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "RELEASE"}
-        com.cemerick/pomegranate {:mvn/version "RELEASE"}}
+        com.cemerick/pomegranate {:mvn/version "RELEASE"}
+        org.bouncycastle/bcprov-jdk15on {:mvn/version "RELEASE"}
+        org.bouncycastle/bcmail-jdk15on {:mvn/version "RELEASE"}
+        org.bouncycastle/bcpg-jdk15on {:mvn/version "RELEASE"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}}

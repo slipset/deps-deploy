@@ -15,13 +15,21 @@ To deploy to Clojars, simply merge
           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
 		      "path/to/my.jar" "group-id/artifact-id" "x.y.z"]}}
 ```
-into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom),` and deploy with 
+into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom),` and deploy with
 
 ```sh
 $ env CLOJARS_USER=username CLOJARS_PASSWORD=password clj -a:deploy
 ```
 
 to deploy to Clojars
+
+You can also store your credentials in a symmetrically encryted file:
+
+```sh
+$ gpg --encrypt .clojars_creds.edn
+```
+
+`deps-deploy` will then prompt you for the passphrase
 
 
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
