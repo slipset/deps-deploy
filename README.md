@@ -26,6 +26,10 @@ to deploy to Clojars
 You can also store your credentials in a symmetrically encryted file:
 
 ```sh
+$ cat > .clojars_creds.edn
+{:username "joe_user"
+ :password "r3a11ygr8"}
+ ^D
 $ gpg --encrypt .clojars_creds.edn
 ```
 
