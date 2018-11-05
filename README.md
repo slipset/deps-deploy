@@ -12,8 +12,8 @@ To deploy to Clojars, simply merge
 
 ```clojure
 {:deploy {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
-          :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" 
-                      "{:artifact,\"YOUR_JAR.jar\",:name,YOUR_ARTIFACT_NAME,:version,\"0.0.1\"}"]}}
+          :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
+		      "path/to/my.jar" "group-id/artifact-id" "x.y.z"]}}
 ```
 into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom),` and deploy with 
 
@@ -28,7 +28,7 @@ to deploy to Clojars
 ```clojure
 {:install {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
            :main-opts ["-m" "deps-deploy.deps-deploy" "install"
-           "{:artifact,\"YOUR_JAR.jar\",:name,YOUR_ARTIFACT_NAME,:version,\"0.0.1\"}"]}}
+			   "path/to/my.jar" "group-id/artifact-id" "x.y.z"]}}
 ```
 
 

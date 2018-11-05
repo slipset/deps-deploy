@@ -6,8 +6,11 @@
 (def default-repo-settings {"clojars" {:url "https://clojars.org/repo"
                                        :username (System/getenv "CLOJARS_USERNAME")
                                        :password (System/getenv "CLOJARS_PASSWORD")}})
-(defn deploy [{:keys [artifact name version repository]
-               :or {repository default-repo-settings} :as opts }]
+
+(defmulti deploy :installer)
+
+(defmethod deploy :clojars [{:keys [artifact name version repository]
+                             :or {repository default-repo-settings} :as opts }]
   (println "Deploying"  (str name "-" version) "to clojars as" (-> repository vals first :username))
   (aether/deploy :pom-file "pom.xml"
                  :jar-file artifact
@@ -15,7 +18,7 @@
                  :coordinates [(symbol name) version])
   (println "done."))
 
-(defn install [{:keys [artifact name version] :as opts}]
+(defmethod deploy :local [{:keys [artifact name version] :as opts}]
   (println "Installing" (str name "-" version)  "to your local `.m2`")
   (aether/install :jar-file (str artifact)
                   :pom-file "pom.xml"
@@ -23,6 +26,10 @@
                   :coordinates [name version])
   (println "done."))
 
-(defn -main [deploy-or-install opts]
-  (cond (= "deploy" deploy-or-install) (deploy (edn/read-string opts))
-        (= "install" deploy-or-install) (install (edn/read-string opts))))
+(defn -main [deploy-or-install artifact name version]
+  (let [artifact-info {:installer (cond (= "deploy" deploy-or-install) :clojars
+                                        (= "install" deploy-or-install) :local)
+                       :artifact artifact
+                       :name (symbol name)
+                       :version version}]
+    (deploy artifact-info)))
