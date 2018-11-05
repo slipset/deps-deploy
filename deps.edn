@@ -1,6 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "RELEASE"}
-        com.cemerick/pomegranate {:mvn/version "RELEASE"}}
+        com.cemerick/pomegranate {:mvn/version "RELEASE"}
+        org.clojure/data.xml {:mvn/version "0.2.0-alpha5"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}}
@@ -16,6 +17,6 @@
         :main-opts ["-m" "mach.pack.alpha.skinny" "--no-libs"
                     "--project-path" "deps-deploy.jar"]}
   :deploy {:main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
-                       "deps-deploy.jar" "deps-deploy" "0.0.6"]}
+                       "deps-deploy.jar"]}
   :install {:main-opts ["-m" "deps-deploy.deps-deploy" "install"
-                        "deps-deploy.jar" "deps-deploy" "0.0.6"]}}}
+                        "deps-deploy.jar"]}}}

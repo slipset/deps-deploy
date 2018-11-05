@@ -1,11 +1,28 @@
 (ns deps-deploy.deps-deploy
   (:require [cemerick.pomegranate.aether :as aether]
             [clojure.edn :as edn]
-            [clojure.pprint :as pp]))
+            [clojure.pprint :as pp]
+            [clojure.data.xml :as xml]))
 
 (def default-repo-settings {"clojars" {:url "https://clojars.org/repo"
                                        :username (System/getenv "CLOJARS_USERNAME")
                                        :password (System/getenv "CLOJARS_PASSWORD")}})
+
+(def name-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/name)
+(def version-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version)
+
+(defn name-version-from-pom [pom-str]
+  (->> pom-str
+       xml/parse-str
+       :content
+       (remove string?)
+       (keep (fn [{:keys [tag] :as m}]
+               (when (or (= tag
+                            name-tag)
+                         (= tag
+                            version-tag))
+                 {(keyword (name tag)) (first (:content m))})))
+       (apply merge)))
 
 (defmulti deploy :installer)
 
@@ -26,10 +43,10 @@
                   :coordinates [name version])
   (println "done."))
 
-(defn -main [deploy-or-install artifact name version]
-  (let [artifact-info {:installer (cond (= "deploy" deploy-or-install) :clojars
-                                        (= "install" deploy-or-install) :local)
-                       :artifact artifact
-                       :name (symbol name)
-                       :version version}]
+(defn -main [deploy-or-install artifact & _]
+  (let [artifact-info (-> {:installer (cond (= "deploy" deploy-or-install) :clojars
+                                            (= "install" deploy-or-install) :local)
+                           :artifact artifact}
+                          (merge (name-version-from-pom (slurp "pom.xml")))
+                          (update :name symbol))]
     (deploy artifact-info)))
