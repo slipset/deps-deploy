@@ -10,7 +10,7 @@
   (let [console (System/console)]
     (String. (.readPassword console "%s" (into-array ["gpg passphrase: "])))))
 
-(defn gpg [{:keys [passphrase args result]}]
+(defn gpg [{:keys [passphrase args]}]
   (try
     (let [runtime (Runtime/getRuntime)
           process (.exec runtime (into-array (into [(gpg-program)] args)))]
@@ -25,8 +25,7 @@
            :args (rest args)
            :success? (or (zero? exit-code) nil)
            :out (slurp out)
-           :err (slurp err-output)
-           :result result})))
+           :err (slurp err-output)})))
     (catch Exception e
       {:success? nil
        :args (rest args)
