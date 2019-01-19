@@ -4,29 +4,22 @@
             Console]))
 
 (defn gpg-program []
-  (or "gpg"))
-
+  (or (System/getenv "DEPS_DEPLOY_GPG") "gpg"))
 
 (defn read-passphrase []
   (let [console (System/console)]
     (String. (.readPassword console "%s" (into-array ["gpg passphrase: "])))))
 
 (defn gpg [{:keys [passphrase args result]}]
-
   (try
     (let [runtime (Runtime/getRuntime)
-          args (if passphrase
-                 (into ["--batch" "--pinentry-mode" "loopback" "--passphrase-fd" "0"] args)
-                 args)
-          args (into [(gpg-program)] args)
-          process (.exec runtime (into-array args))]
+          process (.exec runtime (into-array (into [(gpg-program)] args)))]
       (.addShutdownHook (Runtime/getRuntime)
                         (Thread. (fn [] (.destroy process))))
       (with-open [out (.getInputStream process)
                   err-output (.getErrorStream process)
                   in (.getOutputStream process)]
-        (when passphrase
-          (spit in passphrase))
+        (when passphrase (spit in passphrase))
         (let [exit-code (.waitFor process)]
           {:exit-code exit-code
            :args (rest args)
@@ -42,17 +35,19 @@
 (defn gpg-available? []
   (->> {:args ["--version"]} gpg :success?))
 
-(defn sign-args [file]
-  {:args ["--yes" "--armour" "--detach-sign" file]})
+(defn sign-args [cmd file]
+  (update cmd :args into ["--yes" "--armour" "--detach-sign" file]))
 
-(defn add-passphrase [passphrase cmd]
-  (assoc cmd :passphrase passphrase))
+(defn add-passphrase [cmd passphrase]
+  (-> cmd
+      (update :args #(into ["--batch" "--pinentry-mode" "loopback" "--passphrase-fd" "0"] %))
+      (assoc :passphrase passphrase)))
 
 (defn sign! [passphrase file]
-  (let [result (->> file
-                    (sign-args)
-                    (add-passphrase passphrase)
-                    gpg)]
+  (let [result (-> {}
+                   (add-passphrase passphrase)
+                   (sign-args file)
+                   gpg)]
     (if (:success? result)
       (str file ".asc")
       (throw (Exception. (:err result))))))

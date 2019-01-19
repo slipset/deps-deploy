@@ -57,7 +57,7 @@
              [[:extension (extension f)
                :classifier (classifier version f)] f])))
 
-(defn all-artifacts [sign? version artifiact]
+(defn all-artifacts [sign? version artifact]
   (let [files ["pom.xml" artifact]
         signature-files (when sign? (sign! "pom.xml" artifact))
         all-files (into files signature-files)]
@@ -75,7 +75,7 @@
 
 (defmethod deploy :local [{:keys [artifact-map coordinates]}]
   (println "Installing" (str (first coordinates) "-" (second coordinates)) "to your local `.m2`")
-  (aether/install :artifact-map artifacts-map
+  (aether/install :artifact-map artifact-map
                   :transfer-listener :stdout
                   :coordinates coordinates)
   (println "done."))
