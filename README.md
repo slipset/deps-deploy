@@ -31,6 +31,13 @@ to deploy to Clojars
 			   "path/to/my.jar"]}}
 ```
 
+## Signing
+
+If you want to have your artifacts signed, add `"true"` as the last element of the `:main-opts` vector like so:
+```clojure
+:main-opts ["-m" "deps-deploy.deps-deploy" "install"
+			   "path/to/my.jar" "true"]
+ ```
 
 
 ## License
