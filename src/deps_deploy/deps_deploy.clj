@@ -69,9 +69,9 @@
                              :or {repository default-repo-settings} :as opts }]
   (println "Deploying" (str (first coordinates) "-" (second coordinates)) "to clojars as"
            (-> repository vals first :username))
-  (aether/deploy {:artifact-map artifact-map
-                  :repository repository
-                  :coordinates coordinates}))
+  (aether/deploy :artifact-map artifact-map
+                 :repository repository
+                 :coordinates coordinates))
 
 (defmethod deploy :local [{:keys [artifact-map coordinates]}]
   (println "Installing" (str (first coordinates) "-" (second coordinates)) "to your local `.m2`")
