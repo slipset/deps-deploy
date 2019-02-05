@@ -8,7 +8,8 @@
 
 (def default-repo-settings {"clojars" {:url "https://clojars.org/repo"
                                        :username (System/getenv "CLOJARS_USERNAME")
-                                       :password (System/getenv "CLOJARS_PASSWORD")}})
+                                       :password (System/getenv "CLOJARS_PASSWORD")
+                                       :checksum :ignore}})
 
 (def artifact-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId)
 (def group-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId)
@@ -69,6 +70,7 @@
                              :or {repository default-repo-settings} :as opts }]
   (println "Deploying" (str (first coordinates) "-" (second coordinates)) "to clojars as"
            (-> repository vals first :username))
+  (java.lang.System/setProperty "aether.checksums.forSignature" "true")
   (aether/deploy :artifact-map artifact-map
                  :repository repository
                  :coordinates coordinates))

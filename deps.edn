@@ -17,6 +17,6 @@
         :main-opts ["-m" "mach.pack.alpha.skinny" "--no-libs"
                     "--project-path" "deps-deploy.jar"]}
   :deploy {:main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
-                       "deps-deploy.jar"]}
+                       "deps-deploy.jar" true]}
   :install {:main-opts ["-m" "deps-deploy.deps-deploy" "install"
                         "deps-deploy.jar"]}}}
