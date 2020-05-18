@@ -18,11 +18,19 @@ To deploy to Clojars, simply merge
 into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom`), and deploy with
 
 ```sh
-$ env CLOJARS_USERNAME=username CLOJARS_PASSWORD=password clj -A:deploy
+$ env CLOJARS_USERNAME=username CLOJARS_PASSWORD=clojars-token clj -A:deploy
 ```
 
-to deploy to Clojars
+to deploy to Clojars. 
 
+### A note on Clojars tokens
+
+As of 2020-06-27, Clojars will no longer accept your Clojars password when deploying. You will have to use a token instead.
+Please read more about this [here](https://github.com/clojars/clojars-web/wiki/Deploy-Tokens)
+
+Long story short, just go find yourself a token and use it in lieu of your password and you're done.
+
+## Install locally
 
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
