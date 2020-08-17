@@ -11,7 +11,7 @@ It will read your Clojars username/token from the environment variables `CLOJARS
 To deploy to Clojars, simply merge
 
 ```clojure
-{:deploy {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
+{:deploy {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
 		      "path/to/my.jar"]}}
 ```
@@ -34,7 +34,7 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
-{:install {:extra-deps {deps-deploy {:mvn/version "RELEASE"}}
+{:install {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
            :main-opts ["-m" "deps-deploy.deps-deploy" "install"
 			   "path/to/my.jar"]}}
 ```
