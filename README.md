@@ -21,7 +21,16 @@ into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Sp
 $ env CLOJARS_USERNAME=username CLOJARS_PASSWORD=clojars-token clj -A:deploy
 ```
 
-to deploy to Clojars. 
+to deploy to Clojars.
+
+It is also possible to override the default Clojars URL by supplying your own. For example:
+
+```sh
+$ env CLOJARS_URL=https://internal/repository/maven-releases CLOJARS_USERNAME=username CLOJARS_PASSWORD=password clj -A:deploy
+```
+
+This facilitates deploying artefacts to an internal repository - perhaps a proxy service that is running locally that is used
+to hold private JARs etc...
 
 ### A note on Clojars tokens
 
