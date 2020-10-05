@@ -6,7 +6,7 @@
             [clojure.java.io :as io]
             [clojure.data.xml :as xml]))
 
-(def default-repo-settings {"clojars" {:url "https://clojars.org/repo"
+(def default-repo-settings {"clojars" {:url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
                                        :username (System/getenv "CLOJARS_USERNAME")
                                        :password (System/getenv "CLOJARS_PASSWORD")}})
 
@@ -66,12 +66,13 @@
 (defmulti deploy :installer)
 
 (defmethod deploy :clojars [{:keys [artifact-map coordinates repository]
-                             :or {repository default-repo-settings} :as opts }]
+                             :or {repository default-repo-settings} :as opts}]
   (println "Deploying" (str (first coordinates) "-" (second coordinates)) "to clojars as"
            (-> repository vals first :username))
   (aether/deploy :artifact-map artifact-map
                  :repository repository
-                 :coordinates coordinates))
+                 :coordinates coordinates)
+  (println "done."))
 
 (defmethod deploy :local [{:keys [artifact-map coordinates]}]
   (println "Installing" (str (first coordinates) "-" (second coordinates)) "to your local `.m2`")
