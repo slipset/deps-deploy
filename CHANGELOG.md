@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file. This change
 ## [Unreleased]
 ### Changed
 - Add a new arity to `make-widget-async` to provide a different widget shape.
+- Allow for the repository url to be overridden, e.g., `CLOJARS_URL=https://internal/repository/maven-releases`
 
 ## [0.1.1] - 2018-11-04
 ### Changed
