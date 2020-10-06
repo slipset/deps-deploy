@@ -11,11 +11,8 @@
                  :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
-  :jar {:extra-deps {pack/pack.alpha
-                     {:git/url "https://github.com/juxt/pack.alpha.git"
-                      :sha "8acf80dd4d6e5173585f5c6fec7af28a310f3ed7"}}
-        :main-opts ["-m" "mach.pack.alpha.skinny" "--no-libs"
-                    "--project-path" "deps-deploy.jar"]}
+  :depstar {:extra-deps
+            {seancorfield/depstar {:mvn/version "1.1.117"}}}
   :deploy {:main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
                        "deps-deploy.jar"]}
   :install {:main-opts ["-m" "deps-deploy.deps-deploy" "install"
