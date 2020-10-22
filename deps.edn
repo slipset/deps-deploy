@@ -1,7 +1,8 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "RELEASE"}
         com.cemerick/pomegranate {:mvn/version "RELEASE"}
-        org.clojure/data.xml {:mvn/version "0.2.0-alpha5"}}
+        org.clojure/data.xml {:mvn/version "0.2.0-alpha5"}
+        org.slf4j/slf4j-nop {:mvn/version "RELEASE"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}}
