@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>slipset</groupId>
   <artifactId>deps-deploy</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.3-SNAPSHOT</version>
   <name>deps-deploy</name>
   <scm>
     <connection>scm:git:git://github.com/slipset/deps-deploy.git</connection>

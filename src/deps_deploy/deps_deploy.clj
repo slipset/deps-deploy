@@ -46,7 +46,15 @@
                                       version-tag))
                            {(keyword (name tag)) (first (:content m))})))
                  (apply merge))]
-    {:coordinates [(symbol (str (:groupId tmp) "/" (:artifactId tmp))) (:version tmp)]}))
+    {:group-id (:groupId tmp)
+     :artifact-id (:artifactId tmp)
+     :version (:version tmp)}))
+
+(defn- versioned-pom-filename [{:keys [version artifact-id]}]
+  (str artifact-id "-" version ".pom"))
+
+(defn mvn-coordinates [{:keys [group-id artifact-id version]}]
+  [(symbol (str group-id "/" artifact-id)) version])
 
 (defn sign! [pom jar-file]
   (let [passphrase (gpg/read-passphrase)]
@@ -57,34 +65,45 @@
              [[:extension (extension f)
                :classifier (classifier version f)] f])))
 
-(defn all-artifacts [sign? version artifact]
-  (let [files ["pom.xml" artifact]
-        signature-files (when sign? (sign! "pom.xml" artifact))
+(defn all-artifacts [sign? {:keys [version] :as coordinates} artifact]
+  (let [pom (versioned-pom-filename coordinates)
+        files [pom  artifact]
+        signature-files (when sign? (sign! pom artifact))
         all-files (into files signature-files)]
     (artifacts version all-files)))
+
+(defn- artifact [{:keys [group-id artifact-id version]}]
+  (str group-id "/" artifact-id "-" version))
 
 (defmulti deploy :installer)
 
 (defmethod deploy :clojars [{:keys [artifact-map coordinates repository]
                              :or {repository default-repo-settings} :as opts}]
-  (println "Deploying" (str (first coordinates) "-" (second coordinates)) "to clojars as"
+  (println "Deploying" (artifact coordinates) "to clojars as"
            (-> repository vals first :username))
+  (java.lang.System/setProperty "aether.checksums.forSignature" "true")
   (aether/deploy :artifact-map artifact-map
                  :repository repository
-                 :coordinates coordinates)
+                 :transfer-listener :stdout
+                 :coordinates (mvn-coordinates coordinates))
   (println "done."))
 
 (defmethod deploy :local [{:keys [artifact-map coordinates]}]
-  (println "Installing" (str (first coordinates) "-" (second coordinates)) "to your local `.m2`")
+  (println "Installing" (artifact coordinates) "to your local `.m2`")
   (aether/install :artifact-map artifact-map
                   :transfer-listener :stdout
-                  :coordinates coordinates)
+                  :coordinates (mvn-coordinates coordinates))
   (println "done."))
 
 (defn -main [deploy-or-install artifact & [sign-releases]]
-  (let [coordinates (coordinates-from-pom (slurp "pom.xml"))]
-    (->> {:installer (cond (= "deploy" deploy-or-install) :clojars
-                           (= "install" deploy-or-install) :local)
-          :artifact-map (all-artifacts sign-releases (second (:coordinates coordinates)) artifact)}
-         (merge coordinates)
-         deploy)))
+  (let [pom (slurp "pom.xml")
+        coordinates (coordinates-from-pom pom)
+        versioned-pom (spit (versioned-pom-filename coordinates) pom)]
+
+    (try
+      (deploy {:installer (cond (= "deploy" deploy-or-install) :clojars
+                                (= "install" deploy-or-install) :local)
+               :artifact-map (all-artifacts sign-releases coordinates artifact)
+               :coordinates coordinates})
+      (finally
+        (.delete (java.io.File. (versioned-pom-filename coordinates)))))))
