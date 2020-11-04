@@ -75,9 +75,9 @@
 (defn- artifact [{:keys [group-id artifact-id version]}]
   (str group-id "/" artifact-id "-" version))
 
-(defmulti deploy :installer)
+(defmulti deploy* :installer)
 
-(defmethod deploy :clojars [{:keys [artifact-map coordinates repository]
+(defmethod deploy* :remote [{:keys [artifact-map coordinates repository]
                              :or {repository default-repo-settings} :as opts}]
   (println "Deploying" (artifact coordinates) "to clojars as"
            (-> repository vals first :username))
@@ -88,22 +88,50 @@
                  :coordinates (mvn-coordinates coordinates))
   (println "done."))
 
-(defmethod deploy :local [{:keys [artifact-map coordinates]}]
+(defmethod deploy* :local [{:keys [artifact-map coordinates]}]
   (println "Installing" (artifact coordinates) "to your local `.m2`")
   (aether/install :artifact-map artifact-map
                   :transfer-listener :stdout
                   :coordinates (mvn-coordinates coordinates))
   (println "done."))
 
-(defn -main [deploy-or-install artifact & [sign-releases]]
-  (let [pom (slurp "pom.xml")
-        coordinates (coordinates-from-pom pom)
-        versioned-pom (spit (versioned-pom-filename coordinates) pom)]
+(defn deploy
+  "The main entry point into deps-deploy via tools.deps :exec-fn which
+  supports an opts map that can be supplied via :exec-args.
+
+  Required keys are:
+
+  :artifact   A string specifying the file path relative to the current
+              working directory to the artifact to be deployed.  This will
+              normally be your library packaged as a jar.
+
+  :installer  Set to either :local or :remote depending on whether you
+              want to install into your local .m2 cache or to a remote
+              :repository.
+
+  :pom-file   defaults to \"pom.xml\"
+
+  :sign-releases?  A boolean that specifies whether releases should be
+                   signed
+
+  "
+  [{:keys [pom-file sign-releases? artifact] :as opts}]
+  (let [pom (slurp (or pom-file "pom.xml"))
+        coordinates (coordinates-from-pom pom)]
+    (spit (versioned-pom-filename coordinates) pom)
 
     (try
-      (deploy {:installer (cond (= "deploy" deploy-or-install) :clojars
-                                (= "install" deploy-or-install) :local)
-               :artifact-map (all-artifacts sign-releases coordinates artifact)
-               :coordinates coordinates})
+      (deploy*
+       (assoc opts
+              :artifact-map (all-artifacts sign-releases? coordinates artifact)
+              :coordinates coordinates))
       (finally
         (.delete (java.io.File. (versioned-pom-filename coordinates)))))))
+
+
+;; command line mode
+(defn -main [deploy-or-install artifact & [sign-releases]]
+  (deploy {:installer (cond (= "deploy" deploy-or-install) :remote
+                            (= "install" deploy-or-install) :local)
+           :sign-releases? (= "true" sign-releases)
+           :artifact artifact}))
