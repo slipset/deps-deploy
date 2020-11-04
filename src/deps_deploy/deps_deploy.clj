@@ -100,6 +100,26 @@
                   :coordinates (mvn-coordinates coordinates))
   (println "done."))
 
+(defn- tag-val-replacer [tag->val]
+  (fn [{:keys [tag content attrs] :as el}]
+    (let [replacement-val (tag->val tag ::default)]
+      (if (= ::default replacement-val)
+        el
+        (assoc el :content replacement-val)))))
+
+(defn update-pom [{:keys [pom-file
+                          mvn/version
+                          mvn/group-id
+                          mvn/artifact-id] :as opts}]
+  (-> (or pom-file "pom.xml")
+      io/reader
+      xml/parse
+      (update :content
+                 #(map (tag-val-replacer {version-tag [version]
+                                          group-id-tag [group-id]
+                                          artifact-id-tag [artifact-id]}) %))
+      xml/emit-str))
+
 (defn deploy
   "The main entry point into deps-deploy via tools.deps :exec-fn which
   supports an opts map that can be supplied via :exec-args.
@@ -120,19 +140,18 @@
                    signed
 
   "
-  [{:keys [pom-file sign-releases? artifact] :as opts}]
-  (let [pom (slurp (or pom-file "pom.xml"))
-        coordinates (coordinates-from-pom pom)]
-    (spit (versioned-pom-filename coordinates) pom)
-
+  [{:keys [sign-releases? artifact] :as opts}]
+  (let [updated-pom (update-pom opts)
+        coordinates (coordinates-from-pom updated-pom)
+        updated-pom-file-name (versioned-pom-filename coordinates)]
+    (spit updated-pom-file-name updated-pom)
     (try
       (deploy*
        (assoc opts
               :artifact-map (all-artifacts sign-releases? coordinates artifact)
               :coordinates coordinates))
       (finally
-        (.delete (java.io.File. (versioned-pom-filename coordinates)))))))
-
+        (.delete (java.io.File. updated-pom-file-name))))))
 
 ;; command line mode
 (defn -main [deploy-or-install artifact & [sign-releases]]
@@ -140,3 +159,15 @@
                             (= "install" deploy-or-install) :local)
            :sign-releases? (= "true" sign-releases)
            :artifact artifact}))
+
+(comment
+
+  (deploy {:installer :remote
+           :artifact "deps-deploy.jar"
+           :pom-file "pom.xml"
+           :mvn/version "999"
+           :repository {"clojars" {:url "https://clojars.org/repo"
+                                   :username "clojars-username"
+                                   :password "CLOJARS-token"}}})
+
+  )
