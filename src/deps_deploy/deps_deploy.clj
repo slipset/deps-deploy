@@ -4,7 +4,14 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [clojure.java.io :as io]
-            [clojure.data.xml :as xml]))
+            [clojure.data.xml :as xml])
+  (:import [org.springframework.build.aws.maven
+            PrivateS3Wagon SimpleStorageServiceWagon]))
+
+
+(aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
+(aether/register-wagon-factory! "s3" #(SimpleStorageServiceWagon.))
+
 
 (def default-repo-settings {"clojars" {:url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
                                        :username (System/getenv "CLOJARS_USERNAME")
