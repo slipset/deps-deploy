@@ -12,8 +12,10 @@ To deploy to Clojars, simply merge
 
 ```clojure
 {:deploy {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
-          :main-opts ["-m" "deps-deploy.deps-deploy" "deploy"
-		      "path/to/my.jar"]}}
+          :exec-fn deps-deploy.deps-deploy/deploy
+          :exec-args {:installer :remote
+                       :sign-releases? true
+                       :artifact "deps-deploy.jar"}}}
 ```
 into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom`), and deploy with
 
@@ -65,8 +67,8 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
 {:install {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
-           :main-opts ["-m" "deps-deploy.deps-deploy" "install"
-			   "path/to/my.jar"]}}
+           :exec-args {:installer :local
+                        :artifact "deps-deploy.jar"}}
 ```
 
 ## Signing
@@ -80,7 +82,7 @@ If you want to have your artifacts signed, add `"true"` as the last element of t
 
 ## License
 
-Copyright © 2018 Erik Assum
+Copyright © 2018-2021Erik Assum
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
