@@ -92,15 +92,16 @@
     (println "Deploying" (artifact coordinates) "to repository" id "as"
              (:username settings))))
 
-(defmethod deploy* :remote [{:keys [artifact-map coordinates repository]
-                             :or {repository default-repo-settings} :as opts}]
-  (print-deploy-message opts)
-  (java.lang.System/setProperty "aether.checksums.forSignature" "true")
-  (aether/deploy :artifact-map artifact-map
-                 :repository repository
-                 :transfer-listener :stdout
-                 :coordinates (mvn-coordinates coordinates))
-  (println "done."))
+(defmethod deploy* :remote [{:keys [artifact-map coordinates repository] :as opts}]
+  (let [repository (or repository default-repo-settings)
+        opts (assoc opts :repository repository )]
+    (print-deploy-message opts)
+    (java.lang.System/setProperty "aether.checksums.forSignature" "true")
+    (aether/deploy :artifact-map artifact-map
+                   :repository repository
+                   :transfer-listener :stdout
+                   :coordinates (mvn-coordinates coordinates))
+    (println "done.")))
 
 (defmethod deploy* :local [{:keys [artifact-map coordinates]}]
   (println "Installing" (artifact coordinates) "to your local `.m2`")

@@ -22,11 +22,7 @@
   :deploy {:exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :remote
                        :sign-releases? true
-                       :artifact "deps-deploy.jar"
-
-                       :repository {"clojars" {:url "https://clojars.org/repo"
-                                               :username "your-username"
-                                               :password "CLOJARS_your-deploy-token"}}}}
+                       :artifact "deps-deploy.jar"}}
 
   :install {:exec-fn deps-deploy.deps-deploy/deploy
             :exec-args {:installer :local
