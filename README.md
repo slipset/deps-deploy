@@ -35,12 +35,12 @@ to hold private JARs etc...
 
 ### Deploy to private s3 buckets
 
-To deploy to private s3 bucktes, you first need to specified the `:repository` key in your `deps.edn` alias as `:exec-args` as
+To deploy to private s3 buckets, you first need to specify the `:repository` key in your `deps.edn` alias with `:exec-args` as:
 
 ```clj
 :exec-args {:repository {"releases" {:url "s3p://my/bucket/"}}}
 ```
-Then, when deploying, you need to provide credentials which is done either by 
+Then, when deploying, you need to provide credentials which is done either by:
 
 1. setting the env vars: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
 2. providing them via java system properties aws.accessKeyId and aws.secretKey
@@ -52,7 +52,7 @@ or
 [default]
 aws_access_key_id = AKIAXXXXX
 aws_secret_access_key = SECRET_KEY
-``` 
+```
 For more details see [s3-wagon-provider](https://github.com/s3-wagon-private/s3-wagon-private#aws-credential-providers) and if you need to know how to [configure an S3 bucket see here](https://github.com/s3-wagon-private/s3-wagon-private#aws-policy).
 
 ### A note on Clojars tokens
