@@ -20,7 +20,7 @@ To deploy to Clojars, simply merge
 into your `deps.edn`, have a `pom.xml` handy (you can generate one with `clj -Spom`), and deploy with
 
 ```sh
-$ env CLOJARS_USERNAME=username CLOJARS_PASSWORD=clojars-token clj -A:deploy
+$ env CLOJARS_USERNAME=username CLOJARS_PASSWORD=clojars-token clj -X:deploy
 ```
 
 to deploy to Clojars.
