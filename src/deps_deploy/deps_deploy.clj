@@ -4,7 +4,14 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [clojure.java.io :as io]
-            [clojure.data.xml :as xml]))
+            [clojure.data.xml :as xml])
+  (:import [org.springframework.build.aws.maven
+            PrivateS3Wagon SimpleStorageServiceWagon]))
+
+
+(aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
+(aether/register-wagon-factory! "s3" #(SimpleStorageServiceWagon.))
+
 
 (def default-repo-settings {"clojars" {:url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
                                        :username (System/getenv "CLOJARS_USERNAME")
@@ -77,10 +84,17 @@
 
 (defmulti deploy* :installer)
 
+(defn- print-deploy-message [{:keys [repository coordinates]}]
+  ;; NOTE: pomegranate seems to assume the map contains only a single
+  ;; repository-id/settings pair.
+  (let [id (-> repository keys first)
+        settings (-> repository vals first)]
+    (println "Deploying" (artifact coordinates) "to repository" id "as"
+             (:username settings))))
+
 (defmethod deploy* :remote [{:keys [artifact-map coordinates repository]
                              :or {repository default-repo-settings} :as opts}]
-  (println "Deploying" (artifact coordinates) "to clojars as"
-           (-> repository vals first :username))
+  (print-deploy-message opts)
   (java.lang.System/setProperty "aether.checksums.forSignature" "true")
   (aether/deploy :artifact-map artifact-map
                  :repository repository
