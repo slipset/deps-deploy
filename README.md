@@ -82,7 +82,7 @@ If you want to have your artifacts signed, add `"true"` as the last element of t
 
 ## License
 
-Copyright © 2018-2021Erik Assum
+Copyright © 2018-2021 Erik Assum
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
