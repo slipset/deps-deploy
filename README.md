@@ -42,11 +42,11 @@ To deploy to private s3 buckets, you first need to specify the `:repository` key
 ```
 Then, when deploying, you need to provide credentials which is done either by:
 
-1. setting the env vars: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-2. providing them via java system properties aws.accessKeyId and aws.secretKey
+1. setting the env vars: `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
+2. providing them via java system properties `aws.accessKeyId` and `aws.secretKey`
 or
 
-3. via an AWS credential profile, in the file ~/.aws/credentials with the AWS_PROIFLE env var used to specify which profile to use (or the 'default' profile).
+3. via an AWS credential profile, in the file `~/.aws/credentials` with the `AWS_PROIFLE` env var used to specify which profile to use (or the `[default]` profile).
 
 ```
 [default]
