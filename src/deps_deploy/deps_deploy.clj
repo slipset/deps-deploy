@@ -132,7 +132,8 @@
   "
   [{:keys [pom-file sign-releases? artifact] :as opts}]
   (let [pom (slurp (or pom-file "pom.xml"))
-        coordinates (coordinates-from-pom pom)]
+        coordinates (coordinates-from-pom pom)
+        artifact (str artifact)]
     (spit (versioned-pom-filename coordinates) pom)
 
     (try
