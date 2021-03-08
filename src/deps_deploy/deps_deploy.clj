@@ -4,9 +4,15 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [clojure.java.io :as io]
-            [clojure.data.xml :as xml])
+            [clojure.data.xml :as xml]
+            [clojure.tools.deps.alpha :as t]
+            [medley.core :refer [assoc-some]])
   (:import [org.springframework.build.aws.maven
-            PrivateS3Wagon SimpleStorageServiceWagon]))
+            PrivateS3Wagon SimpleStorageServiceWagon]
+            ;; maven-core
+            [org.apache.maven.settings DefaultMavenSettingsBuilder Settings Server Mirror]
+            ;; maven-settings-builder
+            [org.apache.maven.settings.building DefaultSettingsBuilderFactory]))
 
 
 (aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
@@ -82,6 +88,62 @@
 (defn- artifact [{:keys [group-id artifact-id version]}]
   (str group-id "/" artifact-id "-" version))
 
+(defn- read-edn-files
+  "Given as options map, use tools.deps.alpha to read and merge the
+  applicable `deps.edn` files, from depstar"
+  [{:keys [repro] :or {repro true}}]
+  (let [{:keys [root-edn user-edn project-edn]} (t/find-edn-maps)]
+    (t/merge-edns (if repro
+                    [root-edn project-edn]
+                    [root-edn user-edn project-edn]))))
+
+(defn- set-settings-builder
+  [^DefaultMavenSettingsBuilder default-builder settings-builder]
+  (doto (.. default-builder getClass (getDeclaredField "settingsBuilder"))
+    (.setAccessible true)
+    (.set default-builder settings-builder)))
+
+(defn- get-settings
+  ^Settings []
+  (.buildSettings
+    (doto (DefaultMavenSettingsBuilder.)
+      (set-settings-builder (.newInstance (DefaultSettingsBuilderFactory.))))))
+
+(defn- preprocess-options
+  "Given an options hash map, if any of the values are keywords, look them
+  up as alias values from the full basis (including user `deps.edn`).
+  :installer is the only option that is expected to have a keyword value
+  so we skip the lookup for that.
+  Typically the value of the :repository option is a hashmap, if it is string,
+  that string is used as the key to get the repoistory hashmap from the :mvn/repos hashmap from the full basis.
+  Code to read ~/.m2/settings.xml and get auth credentials from clojure.tools.deps.alpha
+  Based on same fn in depstar"
+  [options]
+  (let [edn-files (read-edn-files {:repro false})
+        aliases   (:aliases edn-files)
+        mvn-repos (:mvn/repos edn-files)]
+    (reduce-kv (fn [opts k v]
+                 (cond
+                   (and (not= :installer k) (keyword? v))
+                     (if (contains? aliases v)
+                       (assoc opts k (get aliases v))
+                       (do
+                         (println k "has value" v "which is an unknown alias")
+                         opts))
+                     (and (= :repository k) (string? v))
+                       (if (contains? mvn-repos v)
+                         (let [settings (get-settings)
+                               repo-settings (->> (.getServers settings) (filter #(= v (.getId ^Server %))) first)]
+                           (assoc opts k {v (assoc-some (get mvn-repos v)
+                                                        :username (.getUsername repo-settings)
+                                                        :password (.getPassword repo-settings))}))
+                         (do
+                           (println k "has value" v "which is an unknown :mvn/repos")
+                           opts))
+                     :else opts))
+               options
+               options)))
+
 (defmulti deploy* :installer)
 
 (defn- print-deploy-message [{:keys [repository coordinates]}]
@@ -130,9 +192,10 @@
                    signed
 
   "
-  [{:keys [pom-file sign-releases? artifact] :as opts}]
-  (let [pom (slurp (or pom-file "pom.xml"))
-        coordinates (coordinates-from-pom pom)
+  [options]
+  (let [{:keys [pom-file sign-releases? artifact] :as opts} (preprocess-options options)
+         pom (slurp (or pom-file "pom.xml"))
+         coordinates (coordinates-from-pom pom)
         artifact (str artifact)]
     (spit (versioned-pom-filename coordinates) pom)
 
