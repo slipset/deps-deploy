@@ -16,9 +16,9 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
 
-  :artifact-id       deps-deploy
-  :group-id          com.dcj
-  :version           "2.0.999-SNAPSHOT"
+  :mvn/artifact-id       deps-deploy
+  :mvn/group-id          com.dcj
+  :mvn/version           "2.0.999-SNAPSHOT"
   :jar/filename      "deps-deploy.jar"
 
   :depstar {:replace-deps
@@ -27,9 +27,9 @@
               :sha "5f4df9ffece4769d01559f7914bd88de024e1348"}}
             :exec-fn hf.depstar/jar
             :exec-args {:jar         :jar/filename
-                        :artifact-id :artifact-id
-                        :group-id    :group-id
-                        :version     :version
+                        :artifact-id :mvn/artifact-id
+                        :group-id    :mvn/group-id
+                        :version     :mvn/version
                         :sync-pom true}}
 
   :deploy {:extra-deps {com.dcj/deps-deploy {:mvn/version "2.0.999-SNAPSHOT"}}
