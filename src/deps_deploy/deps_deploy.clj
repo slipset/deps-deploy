@@ -151,7 +151,7 @@
                            opts))
                      :else opts))
                options
-               options))))
+               options)))
 
 (defmulti deploy* :installer)
 
