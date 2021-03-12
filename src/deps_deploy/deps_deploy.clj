@@ -98,16 +98,29 @@
                     [root-edn user-edn project-edn]))))
 
 (defn- set-settings-builder
+  "Copied from clojure.tools.deps.alpha"
   [^DefaultMavenSettingsBuilder default-builder settings-builder]
   (doto (.. default-builder getClass (getDeclaredField "settingsBuilder"))
     (.setAccessible true)
     (.set default-builder settings-builder)))
 
 (defn- get-settings
+  "Copied from clojure.tools.deps.alpha"
   ^Settings []
   (.buildSettings
     (doto (DefaultMavenSettingsBuilder.)
       (set-settings-builder (.newInstance (DefaultSettingsBuilderFactory.))))))
+
+(defn- get-repo-settings
+  [repo mvn-repos]
+  (when (contains? mvn-repos repo)
+    (let [repo-settings (->> (get-settings)
+                             (.getServers)
+                             (filter #(= repo (.getId ^Server %)))
+                             first)]
+      (assoc-some (get mvn-repos repo)
+                  :username (.getUsername repo-settings)
+                  :password (.getPassword repo-settings)))))
 
 (defn- preprocess-options
   "Given an options hash map, if any of the values are keywords, look them
@@ -131,18 +144,14 @@
                          (println k "has value" v "which is an unknown alias")
                          opts))
                      (and (= :repository k) (string? v))
-                       (if (contains? mvn-repos v)
-                         (let [settings (get-settings)
-                               repo-settings (->> (.getServers settings) (filter #(= v (.getId ^Server %))) first)]
-                           (assoc opts k {v (assoc-some (get mvn-repos v)
-                                                        :username (.getUsername repo-settings)
-                                                        :password (.getPassword repo-settings))}))
+                       (if-let [repo-map (get-repo-settings v mvn-repos)]
+                         (assoc opts k {v repo-map})
                          (do
                            (println k "has value" v "which is an unknown :mvn/repos")
                            opts))
                      :else opts))
                options
-               options)))
+               options))))
 
 (defmulti deploy* :installer)
 
