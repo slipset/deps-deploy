@@ -4,7 +4,6 @@
         s3-wagon-private/s3-wagon-private {:mvn/version "1.3.2"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha5"}
         org.slf4j/slf4j-nop {:mvn/version "RELEASE"}
-        medley/medley {:mvn/version "1.3.0"}
         org.clojure/tools.deps.alpha {:mvn/version "0.9.863"}}
  :aliases
  {:test {:extra-paths ["test"]
@@ -16,15 +15,13 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
 
-  :mvn/artifact-id       deps-deploy
-  :mvn/group-id          com.dcj
-  :mvn/version           "2.0.999-SNAPSHOT"
-  :jar/file-name      "deps-deploy.jar"
+  :mvn/artifact-id deps-deploy
+  :mvn/group-id    com.dcj
+  :mvn/version     "2.0.999-SNAPSHOT"
+  :jar/file-name   "deps-deploy.jar"
 
   :depstar {:replace-deps
-            {com.github.seancorfield/depstar ; 2.0.next:
-             {:git/url "https://github.com/seancorfield/depstar"
-              :sha "5f4df9ffece4769d01559f7914bd88de024e1348"}}
+            {com.github.seancorfield/depstar {:mvn/version "2.0.211"}}
             :exec-fn hf.depstar/jar
             :exec-args {:jar         :jar/file-name
                         :artifact-id :mvn/artifact-id
