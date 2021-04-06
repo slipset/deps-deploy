@@ -4,9 +4,14 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [clojure.java.io :as io]
-            [clojure.data.xml :as xml])
+            [clojure.data.xml :as xml]
+            [clojure.tools.deps.alpha :as t])
   (:import [org.springframework.build.aws.maven
-            PrivateS3Wagon SimpleStorageServiceWagon]))
+            PrivateS3Wagon SimpleStorageServiceWagon]
+            ;; maven-core
+            [org.apache.maven.settings DefaultMavenSettingsBuilder Settings Server Mirror]
+            ;; maven-settings-builder
+            [org.apache.maven.settings.building DefaultSettingsBuilderFactory]))
 
 
 (aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
@@ -82,6 +87,81 @@
 (defn- artifact [{:keys [group-id artifact-id version]}]
   (str group-id "/" artifact-id "-" version))
 
+(defn- assoc-some
+  "Associates a key k, with a value v in a map m, if and only if v is not nil.
+   Copied from https://github.com/weavejester/medley"
+  ([m k v]
+   (if (nil? v) m (assoc m k v)))
+  ([m k v & kvs]
+   (reduce (fn [m [k v]] (assoc-some m k v))
+           (assoc-some m k v)
+           (partition 2 kvs))))
+
+(defn- read-edn-files
+  "Given as options map, use tools.deps.alpha to read and merge the
+  applicable `deps.edn` files, from depstar"
+  [{:keys [repro] :or {repro true}}]
+  (let [{:keys [root-edn user-edn project-edn]} (t/find-edn-maps)]
+    (t/merge-edns (if repro
+                    [root-edn project-edn]
+                    [root-edn user-edn project-edn]))))
+
+(defn- set-settings-builder
+  "Copied from clojure.tools.deps.alpha"
+  [^DefaultMavenSettingsBuilder default-builder settings-builder]
+  (doto (.. default-builder getClass (getDeclaredField "settingsBuilder"))
+    (.setAccessible true)
+    (.set default-builder settings-builder)))
+
+(defn- get-settings
+  "Copied from clojure.tools.deps.alpha"
+  ^Settings []
+  (.buildSettings
+    (doto (DefaultMavenSettingsBuilder.)
+      (set-settings-builder (.newInstance (DefaultSettingsBuilderFactory.))))))
+
+(defn- get-repo-settings
+  [repo mvn-repos]
+  (when (contains? mvn-repos repo)
+    (let [repo-settings (->> (get-settings)
+                             (.getServers)
+                             (filter #(= repo (.getId ^Server %)))
+                             first)]
+      (assoc-some (get mvn-repos repo)
+                  :username (.getUsername repo-settings)
+                  :password (.getPassword repo-settings)))))
+
+(defn- preprocess-options
+  "Given an options hash map, if any of the values are keywords, look them
+  up as alias values from the full basis (including user `deps.edn`).
+  :installer is the only option that is expected to have a keyword value
+  so we skip the lookup for that.
+  Typically the value of the :repository option is a hashmap, if it is string,
+  that string is used as the key to get the repoistory hashmap from the :mvn/repos hashmap from the full basis.
+  Code to read ~/.m2/settings.xml and get auth credentials from clojure.tools.deps.alpha
+  Based on same fn in depstar"
+  [options]
+  (let [edn-files (read-edn-files {:repro false})
+        aliases   (:aliases edn-files)
+        mvn-repos (:mvn/repos edn-files)]
+    (reduce-kv (fn [opts k v]
+                 (cond
+                   (and (not= :installer k) (keyword? v))
+                     (if (contains? aliases v)
+                       (assoc opts k (get aliases v))
+                       (do
+                         (println k "has value" v "which is an unknown alias")
+                         opts))
+                     (and (= :repository k) (string? v))
+                       (if-let [repo-map (get-repo-settings v mvn-repos)]
+                         (assoc opts k {v repo-map})
+                         (do
+                           (println k "has value" v "which is an unknown :mvn/repos")
+                           opts))
+                     :else opts))
+               options
+               options)))
+
 (defmulti deploy* :installer)
 
 (defn- print-deploy-message [{:keys [repository coordinates]}]
@@ -130,9 +210,10 @@
                    signed
 
   "
-  [{:keys [pom-file sign-releases? artifact] :as opts}]
-  (let [pom (slurp (or pom-file "pom.xml"))
-        coordinates (coordinates-from-pom pom)
+  [options]
+  (let [{:keys [pom-file sign-releases? artifact] :as opts} (preprocess-options options)
+         pom (slurp (or pom-file "pom.xml"))
+         coordinates (coordinates-from-pom pom)
         artifact (str artifact)]
     (spit (versioned-pom-filename coordinates) pom)
 
