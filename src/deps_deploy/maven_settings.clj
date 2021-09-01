@@ -27,15 +27,21 @@
   (decode-password encoded-master-password DefaultSecDispatcher/SYSTEM_PROPERTY_SEC_LOCATION))
 
 (defn ^org.sonatype.plexus.components.sec.dispatcher.model.SettingsSecurity read-settings-security
-  "Reads settings-security.xml file into an ^org.sonatype.plexus.components.sec.dispatcher.model.SettingsSecurity object."
-  [^java.io.File file]
-  (SecUtil/read (.getAbsolutePath file) true))
+  "Reads settings-security.xml file into an ^org.sonatype.plexus.components.sec.dispatcher.model.SettingsSecurity object.
+   Defaults to $HOME/.m2/settings-security.xml ."
+  [settings-security-path]
+  (let [settings-security-path (or settings-security-path default-settings-security-path)]
+    (SecUtil/read (.getAbsolutePath (io/as-file settings-security-path)) true)))
 
 (defn ^org.apache.maven.settings.Settings read-settings
-  "Reads settings.xml file into a ^org.apache.maven.settings.Settings object."
-  [^java.io.File settings-path]
-  (let [sr (SettingsXpp3Reader.)]
-    (with-open [rdr (io/reader settings-path)]
+  "Reads settings.xml file into a ^org.apache.maven.settings.Settings object.
+   Defaults to $HOME/.m2/settings.xml.
+
+   See https://maven.apache.org/ref/3.6.2/maven-settings/apidocs/org/apache/maven/settings/Settings.html"
+  [settings-path]
+  (let [settings-path (or settings-path default-settings-path)
+        sr (SettingsXpp3Reader.)]
+    (with-open [rdr (io/reader (io/as-file settings-path))]
       (.read sr rdr))))
 
 (defn decode-server-password
@@ -50,7 +56,7 @@
   (fn map-server
     [server]
     {:id (.getId server)
-     :server-object server
+     :_server server
      :username (.getUsername server)
      :password (decode-password (.getPassword server) plain-master-pw)}))
 
@@ -69,6 +75,26 @@
         map-server (map-server-factory plain-master-pw)]
     (map map-server servers)))
 
+(defn active-profiles
+  "Map of active profile name to ^org.apache.maven.settings.Profile instance."
+  [^org.apache.maven.settings.Settings settings]
+  (let [active-profiles (.getActiveProfiles settings)
+        profiles-map (.getProfilesAsMap settings)]
+    (select-keys profiles-map active-profiles)))
+
+(defn active-repositories
+  "Returns a list of active repositories."
+  [^org.apache.maven.settings.Settings settings]
+  (let [active-profiles (active-profiles settings)
+        get-repos (fn get-repos [p] (into [] (.getRepositories (val p))))
+        repo2props (fn repo2props [r] {:id (.getId r)
+                                       :url (.getUrl r)
+                                       :name (.getName r)
+                                       :layout (.getLayout r)
+                                       :_repository r})
+        repos (flatten (map get-repos active-profiles))]
+    (map repo2props repos)))
+
 
 (comment
 
@@ -85,5 +111,10 @@
         (println "Password :" plain-pw))))
 
   (maven-servers-with-passwords nil)
+  (.getR)(read-settings default-settings-path)
+
+  (active-profiles (read-settings nil))
+
+  (active-repositories (read-settings nil))
 
 0)
