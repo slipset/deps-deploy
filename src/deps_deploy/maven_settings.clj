@@ -55,25 +55,21 @@
   [plain-master-pw]
   (fn map-server
     [server]
-    {:id (.getId server)
-     :_server server
-     :username (.getUsername server)
-     :password (decode-password (.getPassword server) plain-master-pw)}))
+    {(.getId server) {:id (.getId server)
+                      :username (.getUsername server)
+                      :password (decode-password (.getPassword server) plain-master-pw)
+                      :_server server}}))
 
-(defn maven-servers-with-passwords
-  "Reads the servers from maven settings.xml and settings-security.xml files.
-   Decodes the passwords."
-  [opts]
-  (let [{:keys [settings settings-security]} opts
-        settings (or settings default-settings-path)
-        settings-security (or settings-security default-settings-security-path)
-        settings (read-settings (io/as-file settings))
-        settings-security (read-settings-security (io/as-file settings-security))
-        encoded-master-pw (.getMaster settings-security)
+(defn servers-with-passwords
+  "Decodes the passwords from servers.
+   Returns a map from server id -> server settings (including credentials)."
+  [^org.apache.maven.settings.Settings settings
+   ^org.sonatype.plexus.components.sec.dispatcher.model.SettingsSecurity settings-security]
+  (let [encoded-master-pw (.getMaster settings-security)
         plain-master-pw (decode-master-password encoded-master-pw)
         servers (.getServers settings)
         map-server (map-server-factory plain-master-pw)]
-    (map map-server servers)))
+    (into {} (map map-server servers))))
 
 (defn active-profiles
   "Map of active profile name to ^org.apache.maven.settings.Profile instance."
@@ -83,17 +79,32 @@
     (select-keys profiles-map active-profiles)))
 
 (defn active-repositories
-  "Returns a list of active repositories."
+  "Returns a list of active repositories from settings.xml active profiles.
+   Does not include crededentials."
   [^org.apache.maven.settings.Settings settings]
   (let [active-profiles (active-profiles settings)
         get-repos (fn get-repos [p] (into [] (.getRepositories (val p))))
-        repo2props (fn repo2props [r] {:id (.getId r)
-                                       :url (.getUrl r)
-                                       :name (.getName r)
-                                       :layout (.getLayout r)
-                                       :_repository r})
+        repo2props (fn repo2props [r] {(.getId r) {:id (.getId r)
+                                                   :url (.getUrl r)
+                                                   :name (.getName r)
+                                                   :layout (.getLayout r)
+                                                   :_repository r}})
         repos (flatten (map get-repos active-profiles))]
-    (map repo2props repos)))
+    (into {} (map repo2props repos))))
+
+(defn deps-repositories
+  "Returns a map of repo id -> repository settings for easy consumption by deps-deploy.
+   Repositories are read from settings.xml.
+   Passwords for each server are decoded and added to each repo."
+  [opts]
+  (let [{:keys [settings settings-security]} opts
+        settings (or settings default-settings-path)
+        settings-security (or settings-security default-settings-security-path)
+        settings (read-settings (io/as-file settings))
+        settings-security (read-settings-security (io/as-file settings-security))
+        servers-with-pw (servers-with-passwords settings settings-security)
+        active-repos (active-repositories settings)]
+    (merge-with merge servers-with-pw active-repos)))
 
 
 (comment
@@ -110,11 +121,14 @@
         (println "Username :" (.getUsername s))
         (println "Password :" plain-pw))))
 
-  (maven-servers-with-passwords nil)
+  (servers-with-passwords nil nil)
+
   (.getR)(read-settings default-settings-path)
 
   (active-profiles (read-settings nil))
 
   (active-repositories (read-settings nil))
+
+  (deps-repositories nil)
 
 0)
