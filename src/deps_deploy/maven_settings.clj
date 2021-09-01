@@ -27,7 +27,7 @@
   "Reads settings-security.xml file into an ^SettingsSecurity object.
    Defaults to $HOME/.m2/settings-security.xml ."
   (^SettingsSecurity []
-   (read-settings-security nil))
+   (read-settings-security default-settings-security-path))
   (^SettingsSecurity [settings-security-path]
    (let [settings-security-path (or settings-security-path default-settings-security-path)]
      (SecUtil/read (.getAbsolutePath (io/as-file settings-security-path)) true))))
@@ -36,7 +36,7 @@
   "Reads settings.xml file into a ^Settings object.
    Defaults to $HOME/.m2/settings.xml."
   (^Settings []
-   (read-settings nil))
+   (read-settings default-settings-path))
   (^Settings [settings-path]
    (let [settings-path (or settings-path default-settings-path)
          sr (SettingsXpp3Reader.)]
@@ -44,7 +44,7 @@
        (.read sr rdr)))))
 
 (defn decode-server-password
-  "Decodes the server passowr, given a ^Server and plain master password."
+  "Decodes the server password, given a ^Server and plain master password."
   ^String [^String plain-master-pw ^Server server]
   (decode-password (.getPassword server) plain-master-pw))
 
