@@ -3,8 +3,11 @@
         com.cemerick/pomegranate {:mvn/version "RELEASE"}
         s3-wagon-private/s3-wagon-private {:mvn/version "1.3.2"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha5"}
+        org.clojure/tools.deps.alpha {:mvn/version "0.9.863"}
+        org.apache.maven/maven-settings {:mvn/version "3.8.2"}
+        org.apache.maven/maven-settings-builder {:mvn/version "3.8.2"}
         org.slf4j/slf4j-nop {:mvn/version "RELEASE"}
-        org.clojure/tools.deps.alpha {:mvn/version "0.9.863"}}
+        org.sonatype.plexus/plexus-sec-dispatcher {:mvn/version "1.4"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}}
