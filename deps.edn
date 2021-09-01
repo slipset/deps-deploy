@@ -16,8 +16,8 @@
                "-d" "test"]}
 
   :mvn/artifact-id deps-deploy
-  :mvn/group-id    com.dcj
-  :mvn/version     "2.0.999-SNAPSHOT"
+  :mvn/group-id    slipset
+  :mvn/version     "0.1.5"
   :jar/file-name   "deps-deploy.jar"
 
   :depstar {:replace-deps
@@ -29,13 +29,13 @@
                         :version     :mvn/version
                         :sync-pom true}}
 
-  :deploy {:extra-deps {com.dcj/deps-deploy {:mvn/version "2.0.999-SNAPSHOT"}}
+  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
            :exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :remote
                        :sign-releases? true
                        :artifact :jar/file-name}}
 
-  :install {:extra-deps {com.dcj/deps-deploy {:mvn/version "2.0.999-SNAPSHOT"}}
+  :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
             :exec-fn deps-deploy.deps-deploy/deploy
             :exec-args {:installer :local
                         :artifact :jar/file-name}}}}
