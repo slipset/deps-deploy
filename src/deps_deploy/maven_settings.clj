@@ -93,7 +93,7 @@
                                                     :name (.getName r)
                                                     :layout (.getLayout r)
                                                     :_repository r}})
-         repos (flatten (map get-repos active-profiles))]
+         repos (mapcat get-repos active-profiles)]
      (into {} (map repo2props repos)))))
 
 (defn deps-repositories
