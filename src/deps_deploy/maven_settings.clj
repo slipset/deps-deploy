@@ -107,6 +107,16 @@
          active-repos (active-repositories settings)]
      (merge-with merge servers-with-pw active-repos))))
 
+(defn deps-repo-by-id
+  "Return a map from repository id to repository settings.
+   Result can be passed to deps-deploy/deploy fn:
+   {repo-id (get (desp-repositories s ss) repo-id)}
+
+   If not provided, will read $HOME/.m2/settings.xml and $HOME/.m2/settings-security.xml."
+  ([^String repo-id]
+   (deps-repo-by-id repo-id (read-settings) (read-settings-security)))
+  ([^String repo-id ^Settings settings ^SettingsSecurity settings-security]
+   {repo-id (get (deps-repositories settings settings-security) repo-id)}))
 
 (comment
 
