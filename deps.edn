@@ -8,37 +8,34 @@
         org.apache.maven/maven-settings-builder {:mvn/version "3.8.2"}
         org.slf4j/slf4j-nop {:mvn/version "RELEASE"}
         org.sonatype.plexus/plexus-sec-dispatcher {:mvn/version "1.4"}}
- :aliases
- {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "RELEASE"}}}
-  :runner
-  {:extra-deps {com.cognitect/test-runner
-                {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}
-   :main-opts ["-m" "cognitect.test-runner"
-               "-d" "test"]}
+ 
+ :aliases {:test {:extra-deps {com.cognitect/test-runner
+                               {:git/url "https://github.com/cognitect-labs/test-runner"
+                                :sha "dd6da11611eeb87f08780a30ac8ea6012d4c05ce"}}
+                  :extra-paths ["test"]
+                  :exec-fn cognitect.test-runner.api/test}
 
-  :mvn/artifact-id deps-deploy
-  :mvn/group-id    slipset
-  :mvn/version     "0.1.5"
-  :jar/file-name   "deps-deploy.jar"
+           :mvn/artifact-id deps-deploy
+           :mvn/group-id    slipset
+           :mvn/version     "0.1.5"
+           :jar/file-name   "deps-deploy.jar"
 
-  :depstar {:replace-deps
-            {com.github.seancorfield/depstar {:mvn/version "2.0.211"}}
-            :exec-fn hf.depstar/jar
-            :exec-args {:jar         :jar/file-name
-                        :artifact-id :mvn/artifact-id
-                        :group-id    :mvn/group-id
-                        :version     :mvn/version
-                        :sync-pom true}}
+           :depstar {:replace-deps
+                     {com.github.seancorfield/depstar {:mvn/version "2.0.211"}}
+                     :exec-fn hf.depstar/jar
+                     :exec-args {:jar         :jar/file-name
+                                 :artifact-id :mvn/artifact-id
+                                 :group-id    :mvn/group-id
+                                 :version     :mvn/version
+                                 :sync-pom true}}
 
-  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
-           :exec-fn deps-deploy.deps-deploy/deploy
-           :exec-args {:installer :remote
-                       :sign-releases? true
-                       :artifact :jar/file-name}}
+           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+                    :exec-fn deps-deploy.deps-deploy/deploy
+                    :exec-args {:installer :remote
+                                :sign-releases? true
+                                :artifact :jar/file-name}}
 
-  :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
-            :exec-fn deps-deploy.deps-deploy/deploy
-            :exec-args {:installer :local
-                        :artifact :jar/file-name}}}}
+           :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+                     :exec-fn deps-deploy.deps-deploy/deploy
+                     :exec-args {:installer :local
+                                 :artifact :jar/file-name}}}}
