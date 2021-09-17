@@ -29,4 +29,11 @@ Deploy an artifact example
                     :pom-file "pom.xml" ;; pom containing artifact coordinates
                     :repository repo}))
 
+    ;; You can also use a convenience function
+    (let [repo (maven/deps-repo-by-id "my-private-repo")]
+        (dd/deploy {:installer :remote
+                    :artifact "path-to-artifact.zip"
+                    :pom-file "pom.xml" ;; pom containing artifact coordinates
+                    :repository repo}))
+
 ```
