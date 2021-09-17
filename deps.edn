@@ -1,7 +1,7 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "RELEASE"}
         clj-commons/pomegranate {:mvn/version "1.2.1"}
-        s3-wagon-private/s3-wagon-private {:mvn/version "1.3.2"}
+        s3-wagon-private/s3-wagon-private {:mvn/version "1.3.4"}
         org.clojure/data.xml {:mvn/version "0.2.0-alpha6"}
         org.clojure/tools.deps.alpha {:mvn/version "0.12.1036"}
         org.apache.maven/maven-settings {:mvn/version "3.8.2"}
