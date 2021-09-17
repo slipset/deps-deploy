@@ -168,13 +168,15 @@
   ;; NOTE: pomegranate seems to assume the map contains only a single
   ;; repository-id/settings pair.
   (let [id (-> repository keys first)
-        settings (-> repository vals first)]
-    (println "Deploying" (artifact coordinates) "to repository" id "as"
-             (:username settings))))
+        settings (-> repository vals first)
+        {:keys [username]} settings]
+    (if username
+      (println "Deploying" (artifact coordinates) "to repository" id "as" username)
+      (println "Deploying" (artifact coordinates) "to repository" id "."))))
 
 (defmethod deploy* :remote [{:keys [artifact-map coordinates repository] :as opts}]
   (let [repository (or repository default-repo-settings)
-        opts (assoc opts :repository repository )]
+        opts (assoc opts :repository repository)]
     (print-deploy-message opts)
     (java.lang.System/setProperty "aether.checksums.forSignature" "true")
     (aether/deploy :artifact-map artifact-map
