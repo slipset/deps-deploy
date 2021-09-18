@@ -1,7 +1,5 @@
 (ns deps-deploy.gpg
-  (:import [java.lang Runtime]
-           [java.io ByteArrayOutputStream
-            Console]))
+  (:import [java.lang Runtime]))
 
 (defn gpg-program []
   (or (System/getenv "DEPS_DEPLOY_GPG") "gpg"))
@@ -42,9 +40,21 @@
       (update :args #(into ["--batch" "--pinentry-mode" "loopback" "--passphrase-fd" "0"] %))
       (assoc :passphrase passphrase)))
 
+(defn add-key [cmd key]
+  (update cmd :args #(into ["--default-key" key] %)))
+
 (defn sign! [passphrase file]
   (let [result (-> {}
                    (add-passphrase passphrase)
+                   (sign-args file)
+                   gpg)]
+    (if (:success? result)
+      (str file ".asc")
+      (throw (Exception. (:err result))))))
+
+(defn sign-with-key! [key file]
+  (let [result (-> {}
+                   (add-key key)
                    (sign-args file)
                    gpg)]
     (if (:success? result)
