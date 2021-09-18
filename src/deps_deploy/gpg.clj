@@ -11,7 +11,7 @@
 (defn gpg [{:keys [passphrase args]}]
   (try
     (let [runtime (Runtime/getRuntime)
-          process (.exec runtime (into-array (into [(gpg-program)] args)))]
+          process (.exec runtime #^"[Ljava.lang.String;" (into-array (into [(gpg-program)] args)))]
       (.addShutdownHook (Runtime/getRuntime)
                         (Thread. (fn [] (.destroy process))))
       (with-open [out (.getInputStream process)
@@ -50,7 +50,7 @@
                    gpg)]
     (if (:success? result)
       (str file ".asc")
-      (throw (Exception. (:err result))))))
+      (throw (Exception. ^String (:err result))))))
 
 (defn sign-with-key! [key file]
   (let [result (-> {}
@@ -59,7 +59,7 @@
                    gpg)]
     (if (:success? result)
       (str file ".asc")
-      (throw (Exception. (:err result))))))
+      (throw (Exception. ^String (:err result))))))
 
 (comment
   (defn -main [file]
