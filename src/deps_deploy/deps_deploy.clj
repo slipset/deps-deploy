@@ -68,19 +68,22 @@
 (defn mvn-coordinates [{:keys [group-id artifact-id version]}]
   [(symbol (str group-id "/" artifact-id)) version])
 
-(defn sign! [pom jar-file]
-  (let [passphrase (gpg/read-passphrase)]
-    [(gpg/sign! passphrase pom) (gpg/sign! passphrase jar-file)]))
+(defn sign! [pom jar-file sign-key-id]
+  (let [passphrase (gpg/read-passphrase)
+        sign-op! (if sign-key-id 
+                   (partial gpg/sign-with-key! sign-key-id)
+                   (partial gpg/sign! passphrase))]
+    [(sign-op! pom) (sign-op! jar-file)]))
 
 (defn artifacts [version files]
   (into {} (for [f files]
              [[:extension (extension f)
                :classifier (classifier version f)] f])))
 
-(defn all-artifacts [sign? {:keys [version] :as coordinates} artifact]
+(defn all-artifacts [sign? {:keys [version] :as coordinates} artifact sign-key-id]
   (let [pom (versioned-pom-filename coordinates)
         files [pom  artifact]
-        signature-files (when sign? (sign! pom artifact))
+        signature-files (when sign? (sign! pom artifact sign-key-id))
         all-files (into files signature-files)]
     (artifacts version all-files)))
 
@@ -213,7 +216,7 @@
 
   "
   [options]
-  (let [{:keys [pom-file sign-releases? artifact] :as opts} (preprocess-options options)
+  (let [{:keys [pom-file sign-releases? sign-key-id artifact] :as opts} (preprocess-options options)
          pom (slurp (or pom-file "pom.xml"))
          coordinates (coordinates-from-pom pom)
         artifact (str artifact)]
@@ -222,15 +225,16 @@
     (try
       (deploy*
        (assoc opts
-              :artifact-map (all-artifacts sign-releases? coordinates artifact)
+              :artifact-map (all-artifacts sign-releases? coordinates artifact sign-key-id)
               :coordinates coordinates))
       (finally
         (.delete (java.io.File. (versioned-pom-filename coordinates)))))))
 
 
 ;; command line mode
-(defn -main [deploy-or-install artifact & [sign-releases]]
+(defn -main [deploy-or-install artifact & [sign-releases sign-key-id]]
   (deploy {:installer (cond (= "deploy" deploy-or-install) :remote
                             (= "install" deploy-or-install) :local)
            :sign-releases? (= "true" sign-releases)
+           :sign-key-id sign-key-id
            :artifact artifact}))
