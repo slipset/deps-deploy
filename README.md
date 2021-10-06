@@ -33,6 +33,20 @@ $ env CLOJARS_URL=https://internal/repository/maven-releases CLOJARS_USERNAME=us
 This facilitates deploying artefacts to an internal repository - perhaps a proxy service that is running locally that is used
 to hold private JARs etc...
 
+If you want to sign using another key than the default key, you can specify the signing key id:
+
+```clojure
+{:deploy {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
+          :exec-fn deps-deploy.deps-deploy/deploy
+          :exec-args {:installer :remote
+                       :sign-releases? true
+                       :sign-key-id "1C33430999AA1C3C243A302689CACBAD9979E3C5"
+                       :artifact "deps-deploy.jar"}}}
+```
+
+You can use `gpg --list-secret-keys --with-subkey-fingerprints` to find the key ids that are
+known on your system.
+
 ### Deploy to private s3 buckets
 
 To deploy to private s3 buckets, you first need to specify the `:repository` key in your `deps.edn` alias with `:exec-args` as:
@@ -68,7 +82,7 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 ```clojure
 {:install {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
            :exec-args {:installer :local
-                        :artifact "deps-deploy.jar"}}
+                       :artifact "deps-deploy.jar"}}
 ```
 
 ## Signing
@@ -76,9 +90,14 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 If you want to have your artifacts signed, add `"true"` as the last element of the `:main-opts` vector like so:
 ```clojure
 :main-opts ["-m" "deps-deploy.deps-deploy" "install"
-			   "path/to/my.jar" "true"]
- ```
+            "path/to/my.jar" "true"]
+```
 
+If you don't want to use the default key for signing, you can specify the key id:
+```clojure
+:main-opts ["-m" "deps-deploy.deps-deploy" "install"
+            "path/to/my.jar" "true" "1C33430999AA1C3C243A302689CACBAD9979E3C5"]
+```
 
 ## License
 
