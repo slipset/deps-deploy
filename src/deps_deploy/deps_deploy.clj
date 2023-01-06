@@ -179,6 +179,7 @@
         opts (assoc opts :repository repository)]
     (print-deploy-message opts)
     (java.lang.System/setProperty "aether.checksums.forSignature" "true")
+    (java.lang.System/setProperty "aether.checksums.omitChecksumsForExtensions" "")
     (aether/deploy :artifact-map artifact-map
                    :repository repository
                    :transfer-listener :stdout
