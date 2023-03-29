@@ -16,7 +16,7 @@
 
            :mvn/artifact-id deps-deploy
            :mvn/group-id    slipset
-           :mvn/version     "0.2.0"
+           :mvn/version     "0.2.1"
            :jar/file-name   "deps-deploy.jar"
 
            :depstar {:replace-deps
