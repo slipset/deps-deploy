@@ -4,7 +4,7 @@
   <packaging>jar</packaging>
   <groupId>slipset</groupId>
   <artifactId>deps-deploy</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
   <name>deps-deploy</name>
   <dependencies>
     <dependency>
