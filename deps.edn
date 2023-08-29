@@ -37,4 +37,7 @@
            :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :local
-                                 :artifact :jar/file-name}}}}
+                                 :artifact :jar/file-name}}
+           :outdated {;; Note that it is `:deps`, not `:extra-deps`
+                      :deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+                      :main-opts ["-m" "antq.core"]}}}
