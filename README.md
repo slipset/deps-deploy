@@ -81,6 +81,7 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
 {:install {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
+           :exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :local
                        :artifact "deps-deploy.jar"}}
 ```
