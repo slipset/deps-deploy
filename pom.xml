@@ -10,27 +10,27 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.10.3</version>
+      <version>1.11.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-settings-builder</artifactId>
-      <version>3.8.4</version>
+      <version>3.9.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-settings</artifactId>
-      <version>3.8.4</version>
+      <version>3.9.4</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>tools.deps.alpha</artifactId>
-      <version>0.12.1109</version>
+      <version>0.15.1254</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>data.xml</artifactId>
-      <version>0.2.0-alpha6</version>
+      <version>0.2.0-alpha8</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -50,7 +50,7 @@
     <dependency>
       <groupId>clj-commons</groupId>
       <artifactId>pomegranate</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.23</version>
     </dependency>
   </dependencies>
   <build>
