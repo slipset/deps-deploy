@@ -3,8 +3,8 @@
             [deps-deploy.gpg :as gpg]
             [clojure.java.io :as io]
             [clojure.data.xml :as xml]
-            [clojure.tools.deps.alpha :as t]
-            [clojure.tools.deps.alpha.util.dir :as dir])
+            [clojure.tools.deps :as t]
+            [clojure.tools.deps.util.dir :as dir])
   (:import [org.springframework.build.aws.maven
             PrivateS3Wagon SimpleStorageServiceWagon]
             ;; maven-core
