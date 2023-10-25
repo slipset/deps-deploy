@@ -72,11 +72,22 @@
      (into {} (map (partial server-credentials plain-master-pw) servers)))))
 
 (defn active-profiles
-  "Map of active profile name to ^org.apache.maven.settings.Profile instance."
+  "Map of active profile name to ^org.apache.maven.settings.Profile instance.
+
+   opts is a map that can contain:
+
+   :additional-profiles - collection of additional profiles to activate
+
+   This function should follow
+   https://maven.apache.org/guides/introduction/introduction-to-profiles.html#details-on-profile-activation"
   ([]
-   (active-profiles (read-settings)))
+   (active-profiles (read-settings) nil))
   ([^Settings settings]
-   (let [active-profiles (.getActiveProfiles settings)
+   (active-profiles settings nil))
+  ([^Settings settings opts]
+   (let [{:keys [additional-profiles]} opts
+         active-profiles (.getActiveProfiles settings)
+         active-profiles (concat active-profiles additional-profiles)
          profiles-map (.getProfilesAsMap settings)]
      (select-keys profiles-map active-profiles))))
 
@@ -86,7 +97,9 @@
   ([]
    (active-repositories (read-settings)))
   ([^Settings settings]
-   (let [active-profiles (active-profiles settings)
+   (active-repositories settings nil))
+  ([^Settings settings opts]
+   (let [active-profiles (active-profiles settings opts)
          get-repos (fn get-repos [p] (into [] (.getRepositories (val p))))
          repo2props (fn repo2props [r] {(.getId r) {:id (.getId r)
                                                     :url (.getUrl r)
@@ -102,9 +115,13 @@
    Passwords for each server are decoded and added to each repo."
   ([]
    (deps-repositories (read-settings) (read-settings-security)))
+  ([opts]
+   (deps-repositories (read-settings) (read-settings-security) opts))
   ([settings settings-security]
+   (deps-repositories settings settings-security nil))
+  ([settings settings-security opts]
    (let [servers-with-pw (servers-with-passwords settings settings-security)
-         active-repos (active-repositories settings)]
+         active-repos (active-repositories settings opts)]
      (merge-with merge servers-with-pw active-repos))))
 
 (defn deps-repo-by-id
@@ -112,11 +129,14 @@
    Result can be passed to deps-deploy/deploy fn:
    {repo-id (get (desp-repositories s ss) repo-id)}
 
-   If not provided, will read $HOME/.m2/settings.xml and $HOME/.m2/settings-security.xml."
+   If settings and settings-security are not provided,
+   the function will read $HOME/.m2/settings.xml and $HOME/.m2/settings-security.xml."
   ([^String repo-id]
-   (deps-repo-by-id repo-id (read-settings) (read-settings-security)))
-  ([^String repo-id ^Settings settings ^SettingsSecurity settings-security]
-   {repo-id (get (deps-repositories settings settings-security) repo-id)}))
+   (deps-repo-by-id repo-id (read-settings) (read-settings-security) nil))
+  ([^String repo-id opts]
+   (deps-repo-by-id repo-id (read-settings) (read-settings-security) opts))
+  ([^String repo-id ^Settings settings ^SettingsSecurity settings-security opts]
+   {repo-id (get (deps-repositories settings settings-security opts) repo-id)}))
 
 (comment
 
@@ -136,7 +156,11 @@
 
   (read-settings default-settings-path)
 
-  (active-profiles (read-settings))
+  (active-profiles (read-settings) {:additional-profiles ["drevidence"]})
+
+  (deps-repo-by-id "dre-releases")
+
+  (deps-repositories {:additional-profiles ["drevidence"]})
 
   (active-repositories (read-settings))
 
