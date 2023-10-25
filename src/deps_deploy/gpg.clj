@@ -5,7 +5,7 @@
   (or (System/getenv "DEPS_DEPLOY_GPG") "gpg"))
 
 (defn read-passphrase []
-  (let [console (System/console)]
+  (when-let [console (System/console)]
     (String. (.readPassword console "%s" (into-array ["gpg passphrase: "])))))
 
 (defn gpg [{:keys [passphrase args]}]
@@ -36,9 +36,11 @@
   (update cmd :args into ["--yes" "--armour" "--detach-sign" file]))
 
 (defn add-passphrase [cmd passphrase]
-  (-> cmd
-      (update :args #(into ["--batch" "--pinentry-mode" "loopback" "--passphrase-fd" "0"] %))
-      (assoc :passphrase passphrase)))
+  (if passphrase
+    (-> cmd
+        (update :args #(into ["--batch" "--pinentry-mode" "loopback" "--passphrase-fd" "0"] %))
+        (assoc :passphrase passphrase))
+    (update cmd :args #(into ["--batch"] %))))
 
 (defn add-key [cmd key]
   (update cmd :args #(into ["--default-key" key] %)))
