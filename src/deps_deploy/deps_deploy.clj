@@ -3,8 +3,8 @@
             [deps-deploy.gpg :as gpg]
             [clojure.java.io :as io]
             [clojure.data.xml :as xml]
-            [clojure.tools.deps.alpha :as t]
-            [clojure.tools.deps.alpha.util.dir :as dir])
+            [clojure.tools.deps :as t]
+            [clojure.tools.deps.util.dir :as dir])
   (:import [org.springframework.build.aws.maven
             PrivateS3Wagon SimpleStorageServiceWagon]
             ;; maven-core
@@ -15,9 +15,10 @@
 (aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
 (aether/register-wagon-factory! "s3" #(SimpleStorageServiceWagon.))
 
-(def default-repo-settings {"clojars" {:url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
-                                       :username (System/getenv "CLOJARS_USERNAME")
-                                       :password (System/getenv "CLOJARS_PASSWORD")}})
+(def default-repo-settings {:id "clojars"
+                            :url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
+                            :username (System/getenv "CLOJARS_USERNAME")
+                            :password (System/getenv "CLOJARS_PASSWORD")})
 
 (def artifact-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId)
 (def group-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId)
@@ -175,8 +176,8 @@
       (println "Deploying" (artifact coordinates) "to repository" id "."))))
 
 (defmethod deploy* :remote [{:keys [artifact-map coordinates repository] :as opts}]
-  (let [repository (or repository default-repo-settings)
-        opts (assoc opts :repository repository)]
+
+  (let [opts (assoc opts :repository repository)]
     (print-deploy-message opts)
     (java.lang.System/setProperty "aether.checksums.forSignature" "true")
     (java.lang.System/setProperty "aether.checksums.omitChecksumsForExtensions" "")
@@ -217,14 +218,24 @@
   (let [{:keys [pom-file sign-releases? sign-key-id artifact] :as opts} (preprocess-options options)
         pom (slurp (dir/canonicalize (io/file (or pom-file "pom.xml"))))
         coordinates (coordinates-from-pom pom)
-        artifact (str artifact)]
+        artifact (str artifact)
+        [exec-args-repo-id exec-args-repo-settings] (->> options :repository (into []) first)
+        repository {(or exec-args-repo-id
+                        (:id default-repo-settings))
+                    {:url (or (:url exec-args-repo-settings)
+                              (:url default-repo-settings))
+                     :username (or (:username exec-args-repo-settings)
+                                   (:username default-repo-settings))
+                     :password (or (:password exec-args-repo-settings)
+                                   (:password default-repo-settings))}}]
     (spit (versioned-pom-filename coordinates) pom)
 
     (try
       (deploy*
        (assoc opts
               :artifact-map (all-artifacts sign-releases? coordinates artifact sign-key-id)
-              :coordinates coordinates))
+              :coordinates  coordinates
+              :repository   repository))
       (finally
         (.delete (java.io.File. (versioned-pom-filename coordinates)))))))
 
