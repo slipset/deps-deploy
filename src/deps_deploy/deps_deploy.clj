@@ -219,7 +219,7 @@
         pom (slurp (dir/canonicalize (io/file (or pom-file "pom.xml"))))
         coordinates (coordinates-from-pom pom)
         artifact (str artifact)
-        [exec-args-repo-id exec-args-repo-settings] (->> options :repository (into []) first)
+        [exec-args-repo-id exec-args-repo-settings] (->> opts :repository (into []) first)
         repository {(or exec-args-repo-id
                         (:id default-repo-settings))
                     {:url (or (:url exec-args-repo-settings)
