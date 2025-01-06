@@ -1,7 +1,7 @@
 (ns deps-deploy.maven-settings
   "Functions to work with maven settings.xml and settings-security.xml."
   (:require [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as string])
   (:import [org.apache.maven.settings.io.xpp3 SettingsXpp3Reader]
            [org.apache.maven.settings
             Server
@@ -15,13 +15,21 @@
 (def default-settings-path (str (System/getProperty "user.home") "/.m2/settings.xml"))
 (def default-settings-security-path (str (System/getProperty "user.home") "/.m2/settings-security.xml"))
 
+(defn encoded-pw?
+  [s]
+  (and (string/starts-with? s "{")
+       (string/ends-with? s "}")))
+
 ;; Adapted from https://github.com/jelmerk/maven-settings-decoder/blob/master/src/main/java/org/github/jelmerk/maven/settings/Decoder.java
 
 (defn decode-password
   "Decodes a password (got from settings.xml)."
-  ^String [^String encoded-password ^String key]
-  (-> (DefaultPlexusCipher.)
-      (.decryptDecorated encoded-password key)))
+  ^String
+  ([^String encoded-password]
+   (decode-password encoded-password DefaultSecDispatcher/SYSTEM_PROPERTY_SEC_LOCATION))
+  ([^String encoded-password ^String key]
+   (-> (DefaultPlexusCipher.)
+       (.decryptDecorated encoded-password key))))
 
 (defn read-settings-security
   "Reads settings-security.xml file into an ^SettingsSecurity object.
@@ -29,8 +37,10 @@
   (^SettingsSecurity []
    (read-settings-security default-settings-security-path))
   (^SettingsSecurity [settings-security-path]
-   (let [settings-security-path (or settings-security-path default-settings-security-path)]
-     (SecUtil/read (.getAbsolutePath (io/as-file settings-security-path)) true))))
+   (let [settings-security-path (or settings-security-path default-settings-security-path)
+         f (io/as-file settings-security-path)]
+     (when (and (some? f) (.exists f))
+       (SecUtil/read (.getAbsolutePath f) true)))))
 
 (defn read-settings
   "Reads settings.xml file into a ^Settings object.
@@ -53,7 +63,10 @@
   [plain-master-pw server]
   (let [id (.getId server)
         username (.getUsername server)
-        decoded-pw (decode-password (.getPassword server) plain-master-pw)]
+        decoded-pw (if (and (some? plain-master-pw)
+                            (encoded-pw? (.getPassword server)))
+                     (decode-password (.getPassword server) plain-master-pw)
+                     (.getPassword server))]
     {id {:id id
          :username username
          :password decoded-pw
@@ -66,8 +79,9 @@
    (servers-with-passwords (read-settings) (read-settings-security)))
   ([^Settings settings
     ^SettingsSecurity settings-security]
-   (let [encoded-master-pw (.getMaster settings-security)
-         plain-master-pw (decode-password encoded-master-pw DefaultSecDispatcher/SYSTEM_PROPERTY_SEC_LOCATION)
+   (let [plain-master-pw (when settings-security
+                           (decode-password (.getMaster settings-security)
+                                            DefaultSecDispatcher/SYSTEM_PROPERTY_SEC_LOCATION))
          servers (.getServers settings)]
      (into {} (map (partial server-credentials plain-master-pw) servers)))))
 
@@ -119,27 +133,30 @@
    {repo-id (get (deps-repositories settings settings-security) repo-id)}))
 
 (comment
+  (require '[deps-deploy.maven-settings :as mvn])
 
-  (let [settings (read-settings (io/as-file default-settings-path))
-        settings-security (read-settings-security (io/as-file default-settings-security-path))
+  (let [settings (mvn/read-settings)
+        settings-security (mvn/read-settings-security)
         encoded-master-pw (.getMaster settings-security)
-        plain-master-pw (decode-password encoded-master-pw DefaultSecDispatcher/SYSTEM_PROPERTY_SEC_LOCATION)
+        plain-master-pw (mvn/decode-password encoded-master-pw)
         servers (.getServers settings)]
     (doseq [s servers]
-      (let [plain-pw (decode-password (.getPassword s) plain-master-pw)]
-        (println (str/join (repeat 20 "-")))
+      (let [plain-pw (if (mvn/encoded-pw? (.getPassword s))
+                       (mvn/decode-password (.getPassword s) plain-master-pw)
+                       (.getPassword s))]
+        (println "----------")
         (println "Credentials for server" (.getId s) "are")
         (println "Username :" (.getUsername s))
         (println "Password :" plain-pw))))
 
-  (servers-with-passwords)
+  (mvn/servers-with-passwords)
 
-  (read-settings default-settings-path)
+  (mvn/read-settings default-settings-path)
 
-  (active-profiles (read-settings))
+  (mvn/active-profiles (mvn/read-settings))
 
-  (active-repositories (read-settings))
+  (mvn/active-repositories (mvn/read-settings))
 
-  (deps-repositories)
+  (mvn/deps-repositories)
 
   0)
