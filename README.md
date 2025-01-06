@@ -1,4 +1,4 @@
-[![Clojars Project](https://img.shields.io/clojars/v/slipset/deps-deploy.svg)](https://clojars.org/slipset/deps-deploy)
+[![Clojars Project](https://img.shields.io/clojars/v/xcoo/deps-deploy.svg)](https://clojars.org/xcoo/deps-deploy)
 # deps-deploy
 
 A Clojure library to deploy your stuff to clojars with `clj` or `clojure`. It's a very thin wrapper around
@@ -11,7 +11,7 @@ It will read your Clojars username/token from the environment variables `CLOJARS
 To deploy to Clojars, simply merge
 
 ```clojure
-{:deploy {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
+{:deploy {:extra-deps {xcoo/deps-deploy {:mvn/version "RELEASE"}}
           :exec-fn deps-deploy.deps-deploy/deploy
           :exec-args {:installer :remote
                        :sign-releases? true
@@ -36,7 +36,7 @@ to hold private JARs etc...
 If you want to sign using another key than the default key, you can specify the signing key id:
 
 ```clojure
-{:deploy {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
+{:deploy {:extra-deps {xcoo/deps-deploy {:mvn/version "RELEASE"}}
           :exec-fn deps-deploy.deps-deploy/deploy
           :exec-args {:installer :remote
                        :sign-releases? true
@@ -80,7 +80,7 @@ Long story short, just go find yourself a token and use it in lieu of your passw
 
 `deps-deploy` also supports installing to your local `.m2` repo, by invoking `install` instead of `deploy`:
 ```clojure
-{:install {:extra-deps {slipset/deps-deploy {:mvn/version "RELEASE"}}
+{:install {:extra-deps {xcoo/deps-deploy {:mvn/version "RELEASE"}}
            :exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :local
                        :artifact "deps-deploy.jar"}}

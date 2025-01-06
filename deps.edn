@@ -1,11 +1,11 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        clj-commons/pomegranate {:mvn/version "1.2.23"}
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        clj-commons/pomegranate {:mvn/version "1.2.24"}
         s3-wagon-private/s3-wagon-private {:mvn/version "1.3.5"}
-        org.clojure/data.xml {:mvn/version "0.2.0-alpha8"}
-        org.clojure/tools.deps {:mvn/version "0.18.1354"}
-        org.apache.maven/maven-settings {:mvn/version "3.9.4"}
-        org.apache.maven/maven-settings-builder {:mvn/version "3.9.4"}
+        org.clojure/data.xml {:mvn/version "0.2.0-alpha9"}
+        org.clojure/tools.deps {:mvn/version "0.21.1467"}
+        org.apache.maven/maven-settings {:mvn/version "3.9.9"}
+        org.apache.maven/maven-settings-builder {:mvn/version "3.9.9"}
         org.slf4j/slf4j-nop {:mvn/version "RELEASE"}
         org.sonatype.plexus/plexus-sec-dispatcher {:mvn/version "1.4"}}
 
@@ -15,8 +15,8 @@
                   :exec-fn cognitect.test-runner.api/test}
 
            :mvn/artifact-id deps-deploy
-           :mvn/group-id    slipset
-           :mvn/version     "0.2.1"
+           :mvn/group-id    xcoo
+           :mvn/version     "0.3.0-SNAPSHOT"
            :jar/file-name   "deps-deploy.jar"
 
            :depstar {:replace-deps
@@ -28,13 +28,13 @@
                                  :version     :mvn/version
                                  :sync-pom true}}
 
-           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
+           :deploy {:extra-deps {xcoo/deps-deploy {:mvn/version "0.3.0"}}
                     :exec-fn deps-deploy.deps-deploy/deploy
                     :exec-args {:installer :remote
                                 :sign-releases? true
                                 :artifact :jar/file-name}}
 
-           :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
+           :install {:extra-deps {xcoo/deps-deploy {:mvn/version "0.3.0"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :local
                                  :artifact :jar/file-name}}
