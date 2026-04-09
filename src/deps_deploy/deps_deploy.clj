@@ -5,7 +5,8 @@
             [clojure.data.xml :as xml]
             [clojure.tools.deps :as t]
             [clojure.tools.deps.util.dir :as dir])
-  (:import [org.springframework.build.aws.maven
+  (:import [java.util Properties]
+           [org.springframework.build.aws.maven
             PrivateS3Wagon SimpleStorageServiceWagon]
             ;; maven-core
            [org.apache.maven.settings DefaultMavenSettingsBuilder Settings Server]
@@ -175,12 +176,23 @@
       (println "Deploying" (artifact coordinates) "to repository" id "as" username)
       (println "Deploying" (artifact coordinates) "to repository" id "."))))
 
+(defn- version-from-meta-inf []
+  (when-some [pom-properties (io/resource "META-INF/maven/slipset/deps-deploy/pom.properties")]
+    (with-open [is (io/input-stream pom-properties)]
+      (let [props (doto (Properties.)
+                    (.load is))]
+        (.getProperty props "version")))))
+
+(defn- user-agent []
+  (str "deps-deploy/" (or (version-from-meta-inf) "dev")))
+
 (defmethod deploy* :remote [{:keys [artifact-map coordinates repository] :as opts}]
 
   (let [opts (assoc opts :repository repository)]
     (print-deploy-message opts)
     (java.lang.System/setProperty "aether.checksums.forSignature" "true")
     (java.lang.System/setProperty "aether.checksums.omitChecksumsForExtensions" "")
+    (java.lang.System/setProperty "aether.connector.userAgent" (user-agent))
     (aether/deploy :artifact-map artifact-map
                    :repository repository
                    :transfer-listener :stdout
