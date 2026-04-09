@@ -20,9 +20,13 @@
                             :username (System/getenv "CLOJARS_USERNAME")
                             :password (System/getenv "CLOJARS_PASSWORD")})
 
-(def artifact-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId)
-(def group-id-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId)
-(def version-tag :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version)
+(def artifact-id+group-id+version-tags
+  #{:xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId
+    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId
+    :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId
+    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId
+    :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version
+    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version})
 
 ;; copied directly from leiningen
 (defn- extension [f]
@@ -48,12 +52,8 @@
                  :content
                  (remove string?)
                  (keep (fn [{:keys [tag] :as m}]
-                         (when (or (= tag
-                                      artifact-id-tag)
-                                   (= tag
-                                      group-id-tag)
-                                   (= tag
-                                      version-tag))
+                         (when (contains? artifact-id+group-id+version-tags
+                                          tag)
                            {(keyword (name tag)) (first (:content m))})))
                  (apply merge))]
     {:group-id (:groupId tmp)
