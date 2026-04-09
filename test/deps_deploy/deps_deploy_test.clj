@@ -1,9 +1,16 @@
 (ns deps-deploy.deps-deploy-test
   (:require
+   [clojure.java.io :as io]
    [clojure.test :refer [deftest is]]
    [deps-deploy.deps-deploy :as sut])
   (:import
    (org.eclipse.aether.deployment DeploymentException)))
+
+(deftest coordinates-from-pom-works
+  (is (= {:group-id    "deps-deploy-testing"
+          :artifact-id "test-project"
+          :version     "0.0.1"}
+         (sut/coordinates-from-pom (io/file "test-resources/test-project/pom.xml")))))
 
 ;; This is just a basic smoketest to ensure that:
 ;; - the deploy setup works

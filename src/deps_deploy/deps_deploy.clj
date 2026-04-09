@@ -2,12 +2,14 @@
   (:require [cemerick.pomegranate.aether :as aether]
             [deps-deploy.gpg :as gpg]
             [clojure.java.io :as io]
-            [clojure.data.xml :as xml]
             [clojure.tools.deps :as t]
             [clojure.tools.deps.util.dir :as dir])
   (:import [org.springframework.build.aws.maven
             PrivateS3Wagon SimpleStorageServiceWagon]
-            ;; maven-core
+           ;; maven-model
+           [org.apache.maven.model Model]
+           [org.apache.maven.model.io.xpp3 MavenXpp3Reader]
+           ;; maven-core
            [org.apache.maven.settings DefaultMavenSettingsBuilder Settings Server]
             ;; maven-settings-builder
            [org.apache.maven.settings.building DefaultSettingsBuilderFactory]))
@@ -19,14 +21,6 @@
                             :url (or (System/getenv "CLOJARS_URL") "https://clojars.org/repo")
                             :username (System/getenv "CLOJARS_USERNAME")
                             :password (System/getenv "CLOJARS_PASSWORD")})
-
-(def artifact-id+group-id+version-tags
-  #{:xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId
-    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/artifactId
-    :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId
-    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/groupId
-    :xmlns.http%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version
-    :xmlns.https%3A%2F%2Fmaven.apache.org%2FPOM%2F4.0.0/version})
 
 ;; copied directly from leiningen
 (defn- extension [f]
@@ -46,19 +40,16 @@
       classifier-of)))
 ;; copy stops here
 
-(defn coordinates-from-pom [pom-str]
-  (let [tmp (->> pom-str
-                 xml/parse-str
-                 :content
-                 (remove string?)
-                 (keep (fn [{:keys [tag] :as m}]
-                         (when (contains? artifact-id+group-id+version-tags
-                                          tag)
-                           {(keyword (name tag)) (first (:content m))})))
-                 (apply merge))]
-    {:group-id (:groupId tmp)
-     :artifact-id (:artifactId tmp)
-     :version (:version tmp)}))
+(defn- pom->model
+  ^Model [pom-file]
+  (with-open [reader (io/reader pom-file)]
+    (.read (MavenXpp3Reader.) reader)))
+
+(defn coordinates-from-pom [pom-file]
+  (let [model (pom->model pom-file)]
+    {:group-id    (.getGroupId model)
+     :artifact-id (.getArtifactId model)
+     :version     (.getVersion model)}))
 
 (defn- versioned-pom-filename [{:keys [version artifact-id]}]
   (str artifact-id "-" version ".pom"))
@@ -216,8 +207,9 @@
   "
   [options]
   (let [{:keys [pom-file sign-releases? sign-key-id artifact] :as opts} (preprocess-options options)
-        pom (slurp (dir/canonicalize (io/file (or pom-file "pom.xml"))))
-        coordinates (coordinates-from-pom pom)
+        pom-file (dir/canonicalize (io/file (or pom-file "pom.xml")))
+        pom (slurp pom-file)
+        coordinates (coordinates-from-pom pom-file)
         artifact (str artifact)
         [exec-args-repo-id exec-args-repo-settings] (->> options :repository (into []) first)
         repository {(or exec-args-repo-id
