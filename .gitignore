@@ -78,6 +78,9 @@ pom.xml.asc
 .hgignore
 .hg/
 
+# Keep test pom & jar
+!test-resources/test-project/*
+
 # Calva and clojure-lsp
 .calva
 .lsp
