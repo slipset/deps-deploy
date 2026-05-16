@@ -223,7 +223,7 @@
         pom (slurp pom-file)
         coordinates (coordinates-from-pom pom-file)
         artifact (str artifact)
-        [exec-args-repo-id exec-args-repo-settings] (->> options :repository (into []) first)
+        [exec-args-repo-id exec-args-repo-settings] (->> opts :repository (into []) first)
         repository {(or exec-args-repo-id
                         (:id default-repo-settings))
                     {:url (or (:url exec-args-repo-settings)
