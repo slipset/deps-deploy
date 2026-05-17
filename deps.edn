@@ -26,13 +26,13 @@
                                  :version     :mvn/version
                                  :sync-pom true}}
 
-           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
+           :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.3"}}
                     :exec-fn deps-deploy.deps-deploy/deploy
                     :exec-args {:installer :remote
                                 :sign-releases? true
                                 :artifact :jar/file-name}}
 
-           :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}
+           :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.3"}}
                      :exec-fn deps-deploy.deps-deploy/deploy
                      :exec-args {:installer :local
                                  :artifact :jar/file-name}}
