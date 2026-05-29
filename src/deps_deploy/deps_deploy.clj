@@ -2,7 +2,7 @@
   (:require [cemerick.pomegranate.aether :as aether]
             [deps-deploy.gpg :as gpg]
             [clojure.java.io :as io]
-            [clojure.tools.deps :as t]
+            [clojure.tools.deps.edn :as t]
             [clojure.tools.deps.util.dir :as dir])
   (:import [java.util Properties]
            [org.springframework.build.aws.maven
@@ -10,10 +10,10 @@
            ;; maven-model
            [org.apache.maven.model Model]
            [org.apache.maven.model.io.xpp3 MavenXpp3Reader]
-           ;; maven-core
-           [org.apache.maven.settings DefaultMavenSettingsBuilder Settings Server]
-            ;; maven-settings-builder
-           [org.apache.maven.settings.building DefaultSettingsBuilderFactory]))
+           ;; maven-settings
+           [org.apache.maven.settings Settings Server]
+           ;; maven-settings-builder
+           [org.apache.maven.settings.building SettingsBuilder DefaultSettingsBuilderFactory DefaultSettingsBuildingRequest]))
 
 (aether/register-wagon-factory! "s3p" #(PrivateS3Wagon.))
 (aether/register-wagon-factory! "s3" #(SimpleStorageServiceWagon.))
@@ -94,24 +94,20 @@
   "Given as options map, use tools.deps.alpha to read and merge the
   applicable `deps.edn` files, from depstar"
   [{:keys [repro] :or {repro true}}]
-  (let [{:keys [root-edn user-edn project-edn]} (t/find-edn-maps)]
+  (let [{:keys [root user project]} (t/create-edn-maps)]
     (t/merge-edns (if repro
-                    [root-edn project-edn]
-                    [root-edn user-edn project-edn]))))
-
-(defn- set-settings-builder
-  "Copied from clojure.tools.deps.alpha"
-  [^DefaultMavenSettingsBuilder default-builder settings-builder]
-  (doto (.. default-builder getClass (getDeclaredField "settingsBuilder"))
-    (.setAccessible true)
-    (.set default-builder settings-builder)))
+                    [root project]
+                    [root user project]))))
 
 (defn- get-settings
-  "Copied from clojure.tools.deps.alpha"
+  "Copied from clojure.tools.deps.util.maven"
   ^Settings []
-  (.buildSettings
-   (doto (DefaultMavenSettingsBuilder.)
-     (set-settings-builder (.newInstance (DefaultSettingsBuilderFactory.))))))
+  (let [^SettingsBuilder builder (.newInstance (DefaultSettingsBuilderFactory.))
+        request (DefaultSettingsBuildingRequest.)
+        user-settings (io/file (System/getProperty "user.home") ".m2" "settings.xml")]
+    (when (.exists user-settings)
+      (.setUserSettingsFile request user-settings))
+    (.getEffectiveSettings (.build builder request))))
 
 (defn- get-repo-settings
   [repo mvn-repos]
