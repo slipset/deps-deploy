@@ -84,3 +84,5 @@ pom.xml.asc
 # Calva and clojure-lsp
 .calva
 .lsp
+.clj-kondo/.cache
+.portal

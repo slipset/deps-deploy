@@ -20,14 +20,19 @@
       <version>1.12.4</version>
     </dependency>
     <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>tools.deps.edn</artifactId>
+      <version>0.9.27</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-settings-builder</artifactId>
-      <version>3.9.4</version>
+      <version>3.9.16</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-settings</artifactId>
-      <version>3.9.4</version>
+      <version>3.9.16</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -40,19 +45,9 @@
       <version>1.3.5</version>
     </dependency>
     <dependency>
-      <groupId>org.sonatype.plexus</groupId>
-      <artifactId>plexus-sec-dispatcher</artifactId>
-      <version>1.4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>tools.deps</artifactId>
-      <version>0.18.1354</version>
-    </dependency>
-    <dependency>
       <groupId>clj-commons</groupId>
       <artifactId>pomegranate</artifactId>
-      <version>1.3.26</version>
+      <version>1.3.27</version>
     </dependency>
   </dependencies>
   <build>
