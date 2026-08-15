@@ -59,10 +59,9 @@
   [(symbol (str group-id "/" artifact-id)) version])
 
 (defn sign! [pom jar-file sign-key-id]
-  (let [passphrase (gpg/read-passphrase)
-        sign-op! (if sign-key-id
+  (let [sign-op! (if sign-key-id
                    (partial gpg/sign-with-key! sign-key-id)
-                   (partial gpg/sign! passphrase))]
+                   (partial gpg/sign! (gpg/read-passphrase)))]
     [(sign-op! pom) (sign-op! jar-file)]))
 
 (defn artifacts [version files]
